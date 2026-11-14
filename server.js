@@ -1,7 +1,7 @@
 "use strict";
 
 /* =====================================================
-   NOVATALK 🌍 V2.0.0
+   NOVATALK 🌍 V3.0.0
    CONNECT THE WORLD
    BY MARUCE SOLDADO 🇬🇳
 ===================================================== */
@@ -17,41 +17,25 @@ const { createClient } = require("@supabase/supabase-js");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-/* ================= CONFIGURATION ================= */
-
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const JWT_SECRET = process.env.JWT_SECRET;
-
-console.log("NOVATALK CONFIGURATION:", {
-    SUPABASE_URL: Boolean(SUPABASE_URL),
-    SUPABASE_SERVICE_ROLE_KEY: Boolean(SUPABASE_KEY),
-    JWT_SECRET: Boolean(JWT_SECRET)
-});
 
 if (!SUPABASE_URL || !SUPABASE_KEY || !JWT_SECRET) {
     console.error("NOVATALK : configuration manquante.");
     process.exit(1);
 }
 
-/* ================= SUPABASE ================= */
-
-const supabase = createClient(
-    SUPABASE_URL,
-    SUPABASE_KEY,
-    {
-        auth: {
-            persistSession: false,
-            autoRefreshToken: false
-        }
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: {
+        persistSession: false,
+        autoRefreshToken: false
     }
-);
+});
 
 /* ================= MIDDLEWARE ================= */
 
 app.disable("x-powered-by");
-
-/* Render utilise un proxy */
 app.set("trust proxy", 1);
 
 app.use(helmet());
@@ -60,9 +44,7 @@ app.use(cors({
     origin: process.env.FRONTEND_URL || true
 }));
 
-app.use(express.json({
-    limit: "20kb"
-}));
+app.use(express.json({ limit: "20kb" }));
 
 app.use("/api", rateLimit({
     windowMs: 15 * 60 * 1000,
@@ -75,41 +57,30 @@ const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     limit: 10,
     standardHeaders: true,
-    legacyHeaders: false,
-    message: {
-        success: false,
-        message: "Trop de tentatives. Réessayez plus tard."
-    }
+    legacyHeaders: false
 });
 
-/* ================= DIAGNOSTIC ================= */
+/* ================= ERREURS ================= */
 
-function logDatabaseError(operation, error) {
-    console.error("=================================");
-    console.error("NOVATALK - ERREUR SUPABASE");
+function dbError(operation, error) {
+    console.error("NOVATALK DATABASE ERROR");
     console.error("OPERATION:", operation);
     console.error("MESSAGE:", error.message);
     console.error("CODE:", error.code);
     console.error("DETAILS:", error.details);
-    console.error("HINT:", error.hint);
-    console.error("=================================");
 }
 
 /* ================= JWT ================= */
 
 function createToken(user) {
-    return jwt.sign(
-        {
-            id: user.id,
-            username: user.username
-        },
-        JWT_SECRET,
-        {
-            expiresIn: "7d",
-            issuer: "NOVATALK",
-            audience: "NOVATALK_USERS"
-        }
-    );
+    return jwt.sign({
+        id: user.id,
+        username: user.username
+    }, JWT_SECRET, {
+        expiresIn: "7d",
+        issuer: "NOVATALK",
+        audience: "NOVATALK_USERS"
+    });
 }
 
 function authenticate(req, res, next) {
@@ -133,16 +104,17 @@ function authenticate(req, res, next) {
         );
 
         next();
-
-    } catch (error) {
+    } catch {
         return res.status(401).json({
             success: false,
-            message: "Session invalide ou expirée."
+            message: "Session expirée."
         });
     }
 }
 
 /* ================= OUTILS ================= */
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 async function isConversationMember(conversationId, userId) {
     const { data, error } = await supabase
@@ -152,11 +124,47 @@ async function isConversationMember(conversationId, userId) {
         .eq("user_id", userId)
         .maybeSingle();
 
-    if (error) {
-        throw error;
-    }
+    if (error) throw error;
 
     return Boolean(data);
+}
+
+async function areFriends(userA, userB) {
+    const { data, error } = await supabase
+        .from("novatalk_friends")
+        .select("id")
+        .eq("user_id", userA)
+        .eq("friend_id", userB)
+        .maybeSingle();
+
+    if (error) throw error;
+
+    return Boolean(data);
+}
+
+async function getConversationPartner(conversationId, userId) {
+    const { data, error } = await supabase
+        .from("novatalk_conversation_members")
+        .select("user_id")
+        .eq("conversation_id", conversationId);
+
+    if (error) throw error;
+
+    const partner = (data || []).find(
+        member => member.user_id !== userId
+    );
+
+    if (!partner) return null;
+
+    const { data: user, error: userError } = await supabase
+        .from("novatalk_users")
+        .select("id, full_name, username")
+        .eq("id", partner.user_id)
+        .maybeSingle();
+
+    if (userError) throw userError;
+
+    return user;
 }
 
 /* ================= ACCUEIL ================= */
@@ -165,22 +173,19 @@ app.get("/", (req, res) => {
     res.json({
         success: true,
         application: "NOVATALK",
-        slogan: "Connect the World 🌍",
+        slogan: "CONNECT THE WORLD 🌍",
         creator: "MARUCE SOLDADO 🇬🇳",
-        version: "2.0.0",
+        version: "3.0.0",
         status: "online"
     });
 });
 
-/* ================= HEALTH ================= */
-
 app.get("/health", (req, res) => {
     res.json({
         success: true,
-        application: "NOVATALK",
         server: "online",
         database: "configured",
-        version: "2.0.0"
+        version: "3.0.0"
     });
 });
 
@@ -188,15 +193,9 @@ app.get("/health", (req, res) => {
    AUTHENTIFICATION
 ===================================================== */
 
-/* ================= INSCRIPTION ================= */
-
 app.post("/api/auth/register", authLimiter, async (req, res) => {
     try {
-        const {
-            full_name,
-            username,
-            password
-        } = req.body || {};
+        const { full_name, username, password } = req.body || {};
 
         if (
             typeof full_name !== "string" ||
@@ -229,7 +228,7 @@ app.post("/api/auth/register", authLimiter, async (req, res) => {
         if (password.length < 8 || password.length > 72) {
             return res.status(400).json({
                 success: false,
-                message: "Le mot de passe doit contenir entre 8 et 72 caractères."
+                message: "Mot de passe invalide."
             });
         }
 
@@ -246,50 +245,35 @@ app.post("/api/auth/register", authLimiter, async (req, res) => {
             .single();
 
         if (error) {
-            logDatabaseError("INSCRIPTION", error);
+            dbError("INSCRIPTION", error);
 
-            if (error.code === "23505") {
-                return res.status(409).json({
-                    success: false,
-                    message: "Cet identifiant est déjà utilisé."
-                });
-            }
-
-            return res.status(500).json({
+            return res.status(error.code === "23505" ? 409 : 500).json({
                 success: false,
-                message: "Impossible de créer le compte."
+                message: error.code === "23505"
+                    ? "Cet identifiant est déjà utilisé."
+                    : "Impossible de créer le compte."
             });
         }
 
-        const token = createToken(data);
-
-        console.log("NOUVEAU COMPTE:", data.username);
-
         return res.status(201).json({
             success: true,
-            message: "Bienvenue sur NOVATALK !",
-            token,
+            token: createToken(data),
             user: data
         });
 
     } catch (error) {
-        console.error("INSCRIPTION:", error.message);
+        dbError("INSCRIPTION", error);
 
         return res.status(500).json({
             success: false,
-            message: "Erreur interne pendant l'inscription."
+            message: "Erreur pendant l'inscription."
         });
     }
 });
 
-/* ================= CONNEXION ================= */
-
 app.post("/api/auth/login", authLimiter, async (req, res) => {
     try {
-        const {
-            username,
-            password
-        } = req.body || {};
+        const { username, password } = req.body || {};
 
         if (
             typeof username !== "string" ||
@@ -312,52 +296,37 @@ app.post("/api/auth/login", authLimiter, async (req, res) => {
             .eq("username", user)
             .maybeSingle();
 
-        if (error) {
-            logDatabaseError("CONNEXION", error);
+        if (error) throw error;
 
-            return res.status(500).json({
-                success: false,
-                message: "Impossible de vérifier le compte."
-            });
-        }
-
-        if (
-            !data ||
-            !(await bcrypt.compare(password, data.password_hash))
-        ) {
+        if (!data || !(await bcrypt.compare(password, data.password_hash))) {
             return res.status(401).json({
                 success: false,
                 message: "Identifiant ou mot de passe incorrect."
             });
         }
 
-        const token = createToken(data);
-
-        console.log("CONNEXION:", data.username);
+        const safeUser = {
+            id: data.id,
+            full_name: data.full_name,
+            username: data.username,
+            created_at: data.created_at
+        };
 
         return res.json({
             success: true,
-            message: "Connexion réussie.",
-            token,
-            user: {
-                id: data.id,
-                full_name: data.full_name,
-                username: data.username,
-                created_at: data.created_at
-            }
+            token: createToken(safeUser),
+            user: safeUser
         });
 
     } catch (error) {
-        console.error("CONNEXION:", error.message);
+        dbError("CONNEXION", error);
 
         return res.status(500).json({
             success: false,
-            message: "Erreur interne pendant la connexion."
+            message: "Erreur de connexion."
         });
     }
 });
-
-/* ================= MON PROFIL ================= */
 
 app.get("/api/auth/me", authenticate, async (req, res) => {
     try {
@@ -365,9 +334,11 @@ app.get("/api/auth/me", authenticate, async (req, res) => {
             .from("novatalk_users")
             .select("id, full_name, username, created_at")
             .eq("id", req.user.id)
-            .single();
+            .maybeSingle();
 
-        if (error || !data) {
+        if (error) throw error;
+
+        if (!data) {
             return res.status(404).json({
                 success: false,
                 message: "Utilisateur introuvable."
@@ -380,7 +351,7 @@ app.get("/api/auth/me", authenticate, async (req, res) => {
         });
 
     } catch (error) {
-        console.error("PROFIL:", error.message);
+        dbError("PROFIL", error);
 
         return res.status(500).json({
             success: false,
@@ -390,8 +361,41 @@ app.get("/api/auth/me", authenticate, async (req, res) => {
 });
 
 /* =====================================================
-   RECHERCHE DES UTILISATEURS
+   DÉCOUVRIR LES MEMBRES
 ===================================================== */
+
+app.get("/api/users", authenticate, async (req, res) => {
+    try {
+        const limit = Math.min(
+            Math.max(parseInt(req.query.limit, 10) || 30, 1),
+            50
+        );
+
+        const { data, error } = await supabase
+            .from("novatalk_users")
+            .select("id, full_name, username, created_at")
+            .neq("id", req.user.id)
+            .order("created_at", { ascending: false })
+            .limit(limit);
+
+        if (error) throw error;
+
+        return res.json({
+            success: true,
+            users: data || []
+        });
+
+    } catch (error) {
+        dbError("DÉCOUVERTE", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Impossible de charger les membres."
+        });
+    }
+});
+
+/* Recherche conservée pour compatibilité */
 
 app.get("/api/users/search", authenticate, async (req, res) => {
     try {
@@ -420,14 +424,7 @@ app.get("/api/users/search", authenticate, async (req, res) => {
             .neq("id", req.user.id)
             .limit(20);
 
-        if (error) {
-            logDatabaseError("RECHERCHE UTILISATEURS", error);
-
-            return res.status(500).json({
-                success: false,
-                message: "Recherche impossible."
-            });
-        }
+        if (error) throw error;
 
         return res.json({
             success: true,
@@ -435,17 +432,316 @@ app.get("/api/users/search", authenticate, async (req, res) => {
         });
 
     } catch (error) {
-        console.error("RECHERCHE:", error.message);
+        dbError("RECHERCHE", error);
 
         return res.status(500).json({
             success: false,
-            message: "Erreur serveur."
+            message: "Recherche impossible."
         });
     }
 });
 
 /* =====================================================
-   CRÉER OU RETROUVER UNE CONVERSATION PRIVÉE
+   INVITATIONS D'AMITIÉ
+===================================================== */
+
+/* Envoyer une invitation */
+
+app.post("/api/friend-requests", authenticate, async (req, res) => {
+    try {
+        const targetId = req.body?.user_id;
+
+        if (!UUID.test(String(targetId || ""))) {
+            return res.status(400).json({
+                success: false,
+                message: "Utilisateur invalide."
+            });
+        }
+
+        if (targetId === req.user.id) {
+            return res.status(400).json({
+                success: false,
+                message: "Vous ne pouvez pas vous inviter vous-même."
+            });
+        }
+
+        const { data: target, error: targetError } = await supabase
+            .from("novatalk_users")
+            .select("id")
+            .eq("id", targetId)
+            .maybeSingle();
+
+        if (targetError) throw targetError;
+
+        if (!target) {
+            return res.status(404).json({
+                success: false,
+                message: "Utilisateur introuvable."
+            });
+        }
+
+        if (await areFriends(req.user.id, targetId)) {
+            return res.status(409).json({
+                success: false,
+                message: "Vous êtes déjà amis."
+            });
+        }
+
+        /* Une invitation inverse existe peut-être */
+
+        const { data: reverse, error: reverseError } = await supabase
+            .from("novatalk_friend_requests")
+            .select("id, status")
+            .eq("sender_id", targetId)
+            .eq("receiver_id", req.user.id)
+            .maybeSingle();
+
+        if (reverseError) throw reverseError;
+
+        if (reverse?.status === "pending") {
+            return res.status(409).json({
+                success: false,
+                message: "Cette personne vous a déjà envoyé une invitation."
+            });
+        }
+
+        const { data: existing, error: existingError } = await supabase
+            .from("novatalk_friend_requests")
+            .select("id, status")
+            .eq("sender_id", req.user.id)
+            .eq("receiver_id", targetId)
+            .maybeSingle();
+
+        if (existingError) throw existingError;
+
+        let result;
+
+        if (existing) {
+            if (existing.status === "pending") {
+                return res.status(409).json({
+                    success: false,
+                    message: "Invitation déjà envoyée."
+                });
+            }
+
+            const { data, error } = await supabase
+                .from("novatalk_friend_requests")
+                .update({
+                    status: "pending",
+                    updated_at: new Date().toISOString()
+                })
+                .eq("id", existing.id)
+                .select()
+                .single();
+
+            if (error) throw error;
+            result = data;
+
+        } else {
+            const { data, error } = await supabase
+                .from("novatalk_friend_requests")
+                .insert({
+                    sender_id: req.user.id,
+                    receiver_id: targetId
+                })
+                .select()
+                .single();
+
+            if (error) throw error;
+            result = data;
+        }
+
+        return res.status(201).json({
+            success: true,
+            message: "Invitation envoyée.",
+            request: result
+        });
+
+    } catch (error) {
+        dbError("ENVOI INVITATION", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Impossible d'envoyer l'invitation."
+        });
+    }
+});
+
+/* Voir les invitations reçues */
+
+app.get("/api/friend-requests", authenticate, async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from("novatalk_friend_requests")
+            .select("id, sender_id, receiver_id, status, created_at")
+            .eq("receiver_id", req.user.id)
+            .eq("status", "pending")
+            .order("created_at", { ascending: false });
+
+        if (error) throw error;
+
+        const requests = [];
+
+        for (const request of data || []) {
+            const { data: sender, error: senderError } = await supabase
+                .from("novatalk_users")
+                .select("id, full_name, username")
+                .eq("id", request.sender_id)
+                .maybeSingle();
+
+            if (senderError) throw senderError;
+
+            if (sender) {
+                requests.push({
+                    ...request,
+                    sender
+                });
+            }
+        }
+
+        return res.json({
+            success: true,
+            requests
+        });
+
+    } catch (error) {
+        dbError("LISTE INVITATIONS", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Impossible de charger les invitations."
+        });
+    }
+});
+
+/* Accepter ou refuser */
+
+app.post("/api/friend-requests/:id/respond", authenticate, async (req, res) => {
+    try {
+        const requestId = req.params.id;
+        const action = req.body?.action;
+
+        if (!UUID.test(requestId) || !["accept", "reject"].includes(action)) {
+            return res.status(400).json({
+                success: false,
+                message: "Demande invalide."
+            });
+        }
+
+        const { data: request, error } = await supabase
+            .from("novatalk_friend_requests")
+            .select("*")
+            .eq("id", requestId)
+            .eq("receiver_id", req.user.id)
+            .eq("status", "pending")
+            .maybeSingle();
+
+        if (error) throw error;
+
+        if (!request) {
+            return res.status(404).json({
+                success: false,
+                message: "Invitation introuvable ou déjà traitée."
+            });
+        }
+
+        const newStatus = action === "accept" ? "accepted" : "rejected";
+
+        const { error: updateError } = await supabase
+            .from("novatalk_friend_requests")
+            .update({
+                status: newStatus,
+                updated_at: new Date().toISOString()
+            })
+            .eq("id", requestId)
+            .eq("receiver_id", req.user.id);
+
+        if (updateError) throw updateError;
+
+        if (action === "accept") {
+            const friendships = [
+                {
+                    user_id: req.user.id,
+                    friend_id: request.sender_id
+                },
+                {
+                    user_id: request.sender_id,
+                    friend_id: req.user.id
+                }
+            ];
+
+            const { error: friendError } = await supabase
+                .from("novatalk_friends")
+                .upsert(friendships, {
+                    onConflict: "user_id,friend_id",
+                    ignoreDuplicates: true
+                });
+
+            if (friendError) throw friendError;
+        }
+
+        return res.json({
+            success: true,
+            message: action === "accept"
+                ? "Invitation acceptée."
+                : "Invitation refusée."
+        });
+
+    } catch (error) {
+        dbError("RÉPONSE INVITATION", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Impossible de traiter l'invitation."
+        });
+    }
+});
+
+/* =====================================================
+   LISTE DES AMIS
+===================================================== */
+
+app.get("/api/friends", authenticate, async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from("novatalk_friends")
+            .select("friend_id, created_at")
+            .eq("user_id", req.user.id)
+            .order("created_at", { ascending: false });
+
+        if (error) throw error;
+
+        const friends = [];
+
+        for (const item of data || []) {
+            const { data: friend, error: friendError } = await supabase
+                .from("novatalk_users")
+                .select("id, full_name, username, created_at")
+                .eq("id", item.friend_id)
+                .maybeSingle();
+
+            if (friendError) throw friendError;
+
+            if (friend) friends.push(friend);
+        }
+
+        return res.json({
+            success: true,
+            friends
+        });
+
+    } catch (error) {
+        dbError("LISTE AMIS", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Impossible de charger les amis."
+        });
+    }
+});
+
+/* =====================================================
+   CRÉER OU RETROUVER UNE CONVERSATION
 ===================================================== */
 
 app.post("/api/conversations", authenticate, async (req, res) => {
@@ -461,20 +757,13 @@ app.post("/api/conversations", authenticate, async (req, res) => {
             });
         }
 
-        const { data: target, error: targetError } = await supabase
+        const { data: target, error } = await supabase
             .from("novatalk_users")
             .select("id, full_name, username")
             .eq("username", username)
             .maybeSingle();
 
-        if (targetError) {
-            logDatabaseError("RECHERCHE DESTINATAIRE", targetError);
-
-            return res.status(500).json({
-                success: false,
-                message: "Impossible de trouver cet utilisateur."
-            });
-        }
+        if (error) throw error;
 
         if (!target) {
             return res.status(404).json({
@@ -486,11 +775,9 @@ app.post("/api/conversations", authenticate, async (req, res) => {
         if (target.id === req.user.id) {
             return res.status(400).json({
                 success: false,
-                message: "Vous ne pouvez pas discuter avec vous-même."
+                message: "Conversation impossible."
             });
         }
-
-        /* Chercher une conversation déjà existante */
 
         const { data: mine, error: mineError } = await supabase
             .from("novatalk_conversation_members")
@@ -499,20 +786,19 @@ app.post("/api/conversations", authenticate, async (req, res) => {
 
         if (mineError) throw mineError;
 
-        const myConversationIds = (mine || [])
-            .map(item => item.conversation_id);
+        const ids = (mine || []).map(item => item.conversation_id);
 
-        if (myConversationIds.length) {
+        if (ids.length) {
             const { data: shared, error: sharedError } = await supabase
                 .from("novatalk_conversation_members")
                 .select("conversation_id")
                 .eq("user_id", target.id)
-                .in("conversation_id", myConversationIds)
+                .in("conversation_id", ids)
                 .limit(1);
 
             if (sharedError) throw sharedError;
 
-            if (shared && shared.length) {
+            if (shared?.length) {
                 return res.json({
                     success: true,
                     existing: true,
@@ -522,18 +808,22 @@ app.post("/api/conversations", authenticate, async (req, res) => {
             }
         }
 
-        /* Créer une nouvelle conversation */
+        if (!(await areFriends(req.user.id, target.id))) {
+            return res.status(403).json({
+                success: false,
+                message: "Vous devez être amis pour commencer une nouvelle discussion."
+            });
+        }
 
-        const { data: conversation, error: conversationError } =
-            await supabase
-                .from("novatalk_conversations")
-                .insert({})
-                .select("id")
-                .single();
+        const { data: conversation, error: conversationError } = await supabase
+            .from("novatalk_conversations")
+            .insert({})
+            .select("id")
+            .single();
 
         if (conversationError) throw conversationError;
 
-        const { error: membersError } = await supabase
+        const { error: memberError } = await supabase
             .from("novatalk_conversation_members")
             .insert([
                 {
@@ -546,20 +836,14 @@ app.post("/api/conversations", authenticate, async (req, res) => {
                 }
             ]);
 
-        if (membersError) {
+        if (memberError) {
             await supabase
                 .from("novatalk_conversations")
                 .delete()
                 .eq("id", conversation.id);
 
-            throw membersError;
+            throw memberError;
         }
-
-        console.log(
-            "NOUVELLE CONVERSATION:",
-            req.user.username,
-            target.username
-        );
 
         return res.status(201).json({
             success: true,
@@ -569,7 +853,7 @@ app.post("/api/conversations", authenticate, async (req, res) => {
         });
 
     } catch (error) {
-        logDatabaseError("CRÉATION CONVERSATION", error);
+        dbError("CRÉATION CONVERSATION", error);
 
         return res.status(500).json({
             success: false,
@@ -579,7 +863,7 @@ app.post("/api/conversations", authenticate, async (req, res) => {
 });
 
 /* =====================================================
-   LISTE DES CONVERSATIONS
+   LISTE DES CONVERSATIONS + NON LUS
 ===================================================== */
 
 app.get("/api/conversations", authenticate, async (req, res) => {
@@ -593,44 +877,39 @@ app.get("/api/conversations", authenticate, async (req, res) => {
 
         const results = [];
 
-        for (const membership of (memberships || [])) {
+        for (const membership of memberships || []) {
             const conversationId = membership.conversation_id;
 
-            const { data: members, error: membersError } = await supabase
-                .from("novatalk_conversation_members")
-                .select("user_id")
-                .eq("conversation_id", conversationId);
-
-            if (membersError) throw membersError;
-
-            const otherMember = (members || []).find(
-                member => member.user_id !== req.user.id
+            const partner = await getConversationPartner(
+                conversationId,
+                req.user.id
             );
 
-            if (!otherMember) continue;
-
-            const { data: otherUser, error: userError } = await supabase
-                .from("novatalk_users")
-                .select("id, full_name, username")
-                .eq("id", otherMember.user_id)
-                .maybeSingle();
-
-            if (userError) throw userError;
-            if (!otherUser) continue;
+            if (!partner) continue;
 
             const { data: lastMessages, error: messageError } = await supabase
                 .from("novatalk_messages")
-                .select("id, content, sender_id, created_at")
+                .select("id, content, sender_id, created_at, is_read, edited_at, deleted_at")
                 .eq("conversation_id", conversationId)
                 .order("created_at", { ascending: false })
                 .limit(1);
 
             if (messageError) throw messageError;
 
+            const { count, error: unreadError } = await supabase
+                .from("novatalk_messages")
+                .select("id", { count: "exact", head: true })
+                .eq("conversation_id", conversationId)
+                .neq("sender_id", req.user.id)
+                .eq("is_read", false);
+
+            if (unreadError) throw unreadError;
+
             results.push({
                 conversation_id: conversationId,
-                user: otherUser,
-                last_message: lastMessages?.[0] || null
+                user: partner,
+                last_message: lastMessages?.[0] || null,
+                unread_count: count || 0
             });
         }
 
@@ -646,7 +925,7 @@ app.get("/api/conversations", authenticate, async (req, res) => {
         });
 
     } catch (error) {
-        logDatabaseError("LISTE CONVERSATIONS", error);
+        dbError("CONVERSATIONS", error);
 
         return res.status(500).json({
             success: false,
@@ -656,157 +935,305 @@ app.get("/api/conversations", authenticate, async (req, res) => {
 });
 
 /* =====================================================
-   RÉCUPÉRER LES MESSAGES
+   HISTORIQUE DES MESSAGES
 ===================================================== */
 
-app.get(
-    "/api/conversations/:id/messages",
-    authenticate,
-    async (req, res) => {
-        try {
-            const conversationId = req.params.id;
+app.get("/api/conversations/:id/messages", authenticate, async (req, res) => {
+    try {
+        const conversationId = req.params.id;
 
-            if (
-                !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(conversationId)
-            ) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Identifiant de conversation invalide."
-                });
-            }
-
-            const allowed = await isConversationMember(
-                conversationId,
-                req.user.id
-            );
-
-            if (!allowed) {
-                return res.status(403).json({
-                    success: false,
-                    message: "Accès interdit à cette conversation."
-                });
-            }
-
-            const { data, error } = await supabase
-                .from("novatalk_messages")
-                .select("id, conversation_id, sender_id, content, created_at, is_read")
-                .eq("conversation_id", conversationId)
-                .order("created_at", { ascending: true })
-                .limit(100);
-
-            if (error) throw error;
-
-            /* Marquer comme lus les messages reçus */
-
-            const { error: readError } = await supabase
-                .from("novatalk_messages")
-                .update({ is_read: true })
-                .eq("conversation_id", conversationId)
-                .neq("sender_id", req.user.id)
-                .eq("is_read", false);
-
-            if (readError) throw readError;
-
-            return res.json({
-                success: true,
-                messages: data || []
-            });
-
-        } catch (error) {
-            logDatabaseError("RÉCUPÉRATION MESSAGES", error);
-
-            return res.status(500).json({
+        if (!UUID.test(conversationId)) {
+            return res.status(400).json({
                 success: false,
-                message: "Impossible de charger les messages."
+                message: "Conversation invalide."
             });
         }
+
+        if (!(await isConversationMember(conversationId, req.user.id))) {
+            return res.status(403).json({
+                success: false,
+                message: "Accès interdit."
+            });
+        }
+
+        const requestedLimit = parseInt(req.query.limit, 10) || 50;
+        const limit = Math.min(Math.max(requestedLimit, 1), 100);
+        const before = req.query.before;
+
+        let query = supabase
+            .from("novatalk_messages")
+            .select("id, conversation_id, sender_id, content, created_at, is_read, edited_at, deleted_at, reply_to")
+            .eq("conversation_id", conversationId)
+            .order("created_at", { ascending: false })
+            .limit(limit);
+
+        if (before && !Number.isNaN(Date.parse(before))) {
+            query = query.lt("created_at", before);
+        }
+
+        const { data, error } = await query;
+
+        if (error) throw error;
+
+        /* Marquer les messages reçus comme lus */
+
+        const { error: readError } = await supabase
+            .from("novatalk_messages")
+            .update({ is_read: true })
+            .eq("conversation_id", conversationId)
+            .neq("sender_id", req.user.id)
+            .eq("is_read", false);
+
+        if (readError) throw readError;
+
+        /* Récupération après mise à jour */
+
+        const messages = (data || []).reverse().map(message => ({
+            ...message,
+            is_read: message.sender_id === req.user.id
+                ? message.is_read
+                : true
+        }));
+
+        return res.json({
+            success: true,
+            messages,
+            has_more: messages.length === limit
+        });
+
+    } catch (error) {
+        dbError("HISTORIQUE", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Impossible de charger les messages."
+        });
     }
-);
+});
 
 /* =====================================================
    ENVOYER UN MESSAGE
 ===================================================== */
 
-app.post(
-    "/api/conversations/:id/messages",
-    authenticate,
-    async (req, res) => {
-        try {
-            const conversationId = req.params.id;
-            const content = req.body?.content;
+app.post("/api/conversations/:id/messages", authenticate, async (req, res) => {
+    try {
+        const conversationId = req.params.id;
+        const content = req.body?.content;
+        const replyTo = req.body?.reply_to || null;
 
-            if (
-                !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(conversationId)
-            ) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Conversation invalide."
-                });
-            }
-
-            if (
-                typeof content !== "string" ||
-                !content.trim() ||
-                content.trim().length > 4000
-            ) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Le message doit contenir entre 1 et 4000 caractères."
-                });
-            }
-
-            const allowed = await isConversationMember(
-                conversationId,
-                req.user.id
-            );
-
-            if (!allowed) {
-                return res.status(403).json({
-                    success: false,
-                    message: "Vous ne pouvez pas écrire dans cette conversation."
-                });
-            }
-
-            const { data, error } = await supabase
-                .from("novatalk_messages")
-                .insert({
-                    conversation_id: conversationId,
-                    sender_id: req.user.id,
-                    content: content.trim()
-                })
-                .select("id, conversation_id, sender_id, content, created_at, is_read")
-                .single();
-
-            if (error) throw error;
-
-            await supabase
-                .from("novatalk_conversations")
-                .update({
-                    updated_at: new Date().toISOString()
-                })
-                .eq("id", conversationId);
-
-            console.log(
-                "MESSAGE ENVOYÉ PAR:",
-                req.user.username
-            );
-
-            return res.status(201).json({
-                success: true,
-                message: "Message envoyé.",
-                data
-            });
-
-        } catch (error) {
-            logDatabaseError("ENVOI MESSAGE", error);
-
-            return res.status(500).json({
+        if (!UUID.test(conversationId)) {
+            return res.status(400).json({
                 success: false,
-                message: "Impossible d'envoyer le message."
+                message: "Conversation invalide."
             });
         }
+
+        if (
+            typeof content !== "string" ||
+            !content.trim() ||
+            content.trim().length > 4000
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Message invalide."
+            });
+        }
+
+        if (!(await isConversationMember(conversationId, req.user.id))) {
+            return res.status(403).json({
+                success: false,
+                message: "Accès interdit."
+            });
+        }
+
+        if (replyTo !== null) {
+            if (!UUID.test(String(replyTo))) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Réponse invalide."
+                });
+            }
+
+            const { data: original, error: originalError } = await supabase
+                .from("novatalk_messages")
+                .select("id")
+                .eq("id", replyTo)
+                .eq("conversation_id", conversationId)
+                .maybeSingle();
+
+            if (originalError) throw originalError;
+
+            if (!original) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Message d'origine introuvable."
+                });
+            }
+        }
+
+        const { data, error } = await supabase
+            .from("novatalk_messages")
+            .insert({
+                conversation_id: conversationId,
+                sender_id: req.user.id,
+                content: content.trim(),
+                reply_to: replyTo
+            })
+            .select("id, conversation_id, sender_id, content, created_at, is_read, edited_at, deleted_at, reply_to")
+            .single();
+
+        if (error) throw error;
+
+        await supabase
+            .from("novatalk_conversations")
+            .update({
+                updated_at: new Date().toISOString()
+            })
+            .eq("id", conversationId);
+
+        return res.status(201).json({
+            success: true,
+            data
+        });
+
+    } catch (error) {
+        dbError("ENVOI MESSAGE", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Impossible d'envoyer le message."
+        });
     }
-);
+});
+
+/* =====================================================
+   MODIFIER UN MESSAGE
+===================================================== */
+
+app.patch("/api/messages/:id", authenticate, async (req, res) => {
+    try {
+        const messageId = req.params.id;
+        const content = req.body?.content;
+
+        if (!UUID.test(messageId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Message invalide."
+            });
+        }
+
+        if (
+            typeof content !== "string" ||
+            !content.trim() ||
+            content.trim().length > 4000
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Contenu invalide."
+            });
+        }
+
+        const { data: message, error } = await supabase
+            .from("novatalk_messages")
+            .select("id, sender_id, conversation_id, deleted_at")
+            .eq("id", messageId)
+            .maybeSingle();
+
+        if (error) throw error;
+
+        if (!message || message.sender_id !== req.user.id || message.deleted_at) {
+            return res.status(404).json({
+                success: false,
+                message: "Message introuvable ou modification interdite."
+            });
+        }
+
+        const { data, error: updateError } = await supabase
+            .from("novatalk_messages")
+            .update({
+                content: content.trim(),
+                edited_at: new Date().toISOString()
+            })
+            .eq("id", messageId)
+            .eq("sender_id", req.user.id)
+            .select()
+            .single();
+
+        if (updateError) throw updateError;
+
+        return res.json({
+            success: true,
+            message: "Message modifié.",
+            data
+        });
+
+    } catch (error) {
+        dbError("MODIFICATION MESSAGE", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Impossible de modifier le message."
+        });
+    }
+});
+
+/* =====================================================
+   SUPPRIMER UN MESSAGE
+===================================================== */
+
+app.delete("/api/messages/:id", authenticate, async (req, res) => {
+    try {
+        const messageId = req.params.id;
+
+        if (!UUID.test(messageId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Message invalide."
+            });
+        }
+
+        const { data: message, error } = await supabase
+            .from("novatalk_messages")
+            .select("id, sender_id, deleted_at")
+            .eq("id", messageId)
+            .maybeSingle();
+
+        if (error) throw error;
+
+        if (!message || message.sender_id !== req.user.id) {
+            return res.status(404).json({
+                success: false,
+                message: "Message introuvable ou suppression interdite."
+            });
+        }
+
+        if (!message.deleted_at) {
+            const { error: deleteError } = await supabase
+                .from("novatalk_messages")
+                .update({
+                    content: "Ce message a été supprimé.",
+                    deleted_at: new Date().toISOString()
+                })
+                .eq("id", messageId)
+                .eq("sender_id", req.user.id);
+
+            if (deleteError) throw deleteError;
+        }
+
+        return res.json({
+            success: true,
+            message: "Message supprimé."
+        });
+
+    } catch (error) {
+        dbError("SUPPRESSION MESSAGE", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Impossible de supprimer le message."
+        });
+    }
+});
 
 /* =====================================================
    DÉCONNEXION
@@ -815,7 +1242,7 @@ app.post(
 app.post("/api/auth/logout", authenticate, (req, res) => {
     return res.json({
         success: true,
-        message: "Déconnexion effectuée. Supprimez le jeton côté client."
+        message: "Déconnexion effectuée."
     });
 });
 
@@ -833,13 +1260,11 @@ app.use((req, res) => {
 app.use((error, req, res, next) => {
     console.error("ERREUR SERVEUR:", error.message);
 
-    if (res.headersSent) {
-        return next(error);
-    }
+    if (res.headersSent) return next(error);
 
     res.status(500).json({
         success: false,
-        message: "Une erreur est survenue."
+        message: "Erreur serveur."
     });
 });
 
@@ -850,8 +1275,7 @@ app.listen(PORT, () => {
     console.log("NOVATALK 🌍");
     console.log("CONNECT THE WORLD");
     console.log("BY MARUCE SOLDADO 🇬🇳");
-    console.log("--------------------------------");
-    console.log("VERSION: 2.0.0");
+    console.log("VERSION: 3.0.0");
     console.log("SERVER: ONLINE");
     console.log("PORT:", PORT);
     console.log("--------------------------------");
