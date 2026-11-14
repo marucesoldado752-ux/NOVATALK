@@ -28,6 +28,7 @@ body{
 button,input{font:inherit}
 button{cursor:pointer}
 .hidden{display:none!important}
+
 #authScreen{
   min-height:100vh;
   display:flex;
@@ -99,6 +100,7 @@ button{cursor:pointer}
   color:var(--green);
   font-weight:bold;
 }
+
 #app{
   min-height:100vh;
   display:grid;
@@ -275,6 +277,7 @@ button{cursor:pointer}
   color:var(--muted);
 }
 .empty .icon{font-size:35px;margin-bottom:12px}
+
 .chat-layout{
   display:grid;
   grid-template-columns:320px 1fr;
@@ -508,9 +511,7 @@ button{cursor:pointer}
 </style>
 </head>
 
-<body>
-
-<div id="authScreen">
+<body><div id="authScreen">
   <div class="auth-box">
     <div class="logo">NOVATALK 🌍</div>
     <div class="subtitle">CONNECT THE WORLD · BY MARUCE SOLDADO 🇬🇳</div>
@@ -603,6 +604,7 @@ button{cursor:pointer}
         <h3>💬 Discussions</h3>
         <div id="conversationList"></div>
       </div>
+
       <div class="chat-window">
         <div class="chat-header">
           <button class="back-btn" onclick="closeConversation()">‹</button>
@@ -612,13 +614,16 @@ button{cursor:pointer}
             <small id="chatUsername"></small>
           </div>
         </div>
+
         <div class="messages" id="messages">
           <div class="empty">Choisis une discussion pour commencer</div>
         </div>
+
         <div id="replyBar" class="reply-bar hidden">
           <span id="replyText">Réponse</span>
           <button onclick="cancelReply()">✕</button>
         </div>
+
         <div class="composer">
           <input id="messageInput" placeholder="Écrire un message..." maxlength="5000">
           <button class="send-btn" onclick="sendMessage()">➤</button>
@@ -661,7 +666,11 @@ const $ = id => document.getElementById(id);
 
 function escapeHTML(value){
   return String(value ?? "").replace(/[&<>"']/g, c => ({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#39;"
   })[c]);
 }
 
@@ -691,10 +700,15 @@ function hideNotice(id){
 }
 
 async function api(path, options={}){
-  const headers={"Content-Type":"application/json",...(options.headers||{})};
+  const headers={
+    "Content-Type":"application/json",
+    ...(options.headers||{})
+  };
+
   if(token)headers.Authorization="Bearer "+token;
 
   let response;
+
   try{
     response=await fetch(API_BASE+path,{
       ...options,
@@ -705,11 +719,15 @@ async function api(path, options={}){
   }
 
   let data={};
-  try{data=await response.json()}catch(e){}
+
+  try{
+    data=await response.json();
+  }catch(e){}
 
   if(!response.ok || data.success===false){
     throw new Error(data.message || data.error || "Une erreur est survenue.");
   }
+
   return data;
 }
 
@@ -727,10 +745,15 @@ function showRegister(){
   hideNotice("authNotice");
 }
 
+/* CONNEXION CORRIGÉE */
+
 async function login(){
   const username=$("loginUsername").value.trim();
   const password=$("loginPassword").value;
-  if(!username || !password)return showNotice("authNotice","Remplis tous les champs.");
+
+  if(!username || !password){
+    return showNotice("authNotice","Remplis tous les champs.");
+  }
 
   const button=$("loginButton");
   button.disabled=true;
@@ -741,19 +764,44 @@ async function login(){
       method:"POST",
       body:JSON.stringify({username,password})
     });
-    if(!data.token)throw new Error("Le serveur n'a pas renvoyé de jeton de connexion.");
+
+    if(!data.token){
+      throw new Error("Le serveur n'a pas renvoyé de jeton de connexion.");
+    }
+
     token=data.token;
     localStorage.setItem(TOKEN_KEY,token);
-    await loadProfile();
+
+    currentUser=data.user || data.profile || null;
+
+    if(!currentUser){
+      await loadProfile();
+    }
+
+    if(!currentUser){
+      throw new Error("Impossible de charger ton profil.");
+    }
+
+    hideNotice("authNotice");
     enterApp();
     toast("Bienvenue sur NOVATALK !");
+
   }catch(error){
-    showNotice("authNotice",error.message);
+    console.error("ERREUR CONNEXION:",error);
+
+    token="";
+    currentUser=null;
+    localStorage.removeItem(TOKEN_KEY);
+
+    showNotice("authNotice",error.message || "Connexion impossible.");
+
   }finally{
     button.disabled=false;
     button.textContent="Se connecter";
   }
 }
+
+/* INSCRIPTION CORRIGÉE */
 
 async function register(){
   const full_name=$("registerName").value.trim();
@@ -761,14 +809,17 @@ async function register(){
   const password=$("registerPassword").value;
   const confirm=$("registerConfirm").value;
 
-  if(!full_name || !username || !password || !confirm)
+  if(!full_name || !username || !password || !confirm){
     return showNotice("authNotice","Remplis tous les champs.");
+  }
 
-  if(password.length<6)
+  if(password.length<6){
     return showNotice("authNotice","Le mot de passe doit contenir au moins 6 caractères.");
+  }
 
-  if(password!==confirm)
+  if(password!==confirm){
     return showNotice("authNotice","Les mots de passe ne correspondent pas.");
+  }
 
   const button=$("registerButton");
   button.disabled=true;
@@ -783,32 +834,58 @@ async function register(){
     if(data.token){
       token=data.token;
       localStorage.setItem(TOKEN_KEY,token);
-      await loadProfile();
+
+      currentUser=data.user || data.profile || null;
+
+      if(!currentUser){
+        await loadProfile();
+      }
+
       enterApp();
       toast("Ton compte NOVATALK est créé !");
+
     }else{
       showLogin();
       $("loginUsername").value=username;
-      showNotice("authNotice","Compte créé. Connecte-toi avec ton identifiant et ton mot de passe.","success");
+
+      showNotice(
+        "authNotice",
+        "Compte créé. Connecte-toi avec ton identifiant et ton mot de passe.",
+        "success"
+      );
     }
+
   }catch(error){
     showNotice("authNotice",error.message);
+
   }finally{
     button.disabled=false;
     button.textContent="Créer mon compte";
   }
 }
 
+/* PROFIL */
+
 async function loadProfile(){
   const data=await api("/auth/me");
-  currentUser=data.user || data.profile || data;
-}
+
+  if(!data.user){
+    throw new Error("Profil utilisateur introuvable.");
+  }
+
+  currentUser=data.user;
+  return currentUser;
+}/* ENTRÉE DANS L'APPLICATION */
 
 function enterApp(){
   $("authScreen").classList.add("hidden");
   $("app").classList.remove("hidden");
 
-  const name=currentUser.full_name || currentUser.name || currentUser.username || "Utilisateur";
+  const name=currentUser.full_name ||
+    currentUser.name ||
+    currentUser.username ||
+    "Utilisateur";
+
   const username=currentUser.username || "";
 
   $("sideName").textContent=name;
@@ -828,17 +905,21 @@ function enterApp(){
   },10000);
 
   refreshMessagesTimer=setInterval(()=>{
-    if(currentPage==="chats" && currentConversation)loadMessages(true);
+    if(currentPage==="chats" && currentConversation){
+      loadMessages(true);
+    }
   },4000);
 }
 
 async function restoreSession(){
   if(!token)return;
+
   try{
     await loadProfile();
     enterApp();
   }catch(error){
     token="";
+    currentUser=null;
     localStorage.removeItem(TOKEN_KEY);
   }
 }
@@ -847,11 +928,15 @@ function logout(){
   token="";
   currentUser=null;
   currentConversation=null;
+
   localStorage.removeItem(TOKEN_KEY);
+
   clearInterval(refreshChatsTimer);
   clearInterval(refreshMessagesTimer);
+
   $("app").classList.add("hidden");
   $("authScreen").classList.remove("hidden");
+
   showLogin();
   toast("Déconnexion effectuée.");
 }
@@ -877,6 +962,7 @@ function navigate(page){
     requests:"Invitations",
     members:"Membres"
   };
+
   $("topTitle").textContent=titles[page] || "NOVATALK";
 
   if(page==="chats"){
@@ -884,6 +970,7 @@ function navigate(page){
     $("chatPage").classList.remove("hidden");
     loadConversations();
   }
+
   if(page==="friends")renderFriends();
   if(page==="requests")renderRequests();
   if(page==="members")renderMembers();
@@ -904,6 +991,7 @@ async function loadFriends(){
   try{
     const data=await api("/friends");
     friends=data.friends || data.users || [];
+
     if(currentPage==="friends")renderFriends();
   }catch(error){
     console.error("Amis:",error);
@@ -914,7 +1002,9 @@ async function loadRequests(){
   try{
     const data=await api("/friend-requests");
     incomingRequests=data.requests || data.friend_requests || [];
+
     updateRequestCount();
+
     if(currentPage==="requests")renderRequests();
   }catch(error){
     console.error("Invitations:",error);
@@ -925,6 +1015,7 @@ async function loadMembers(){
   try{
     const data=await api("/users");
     members=data.users || data.members || [];
+
     if(currentPage==="members")renderMembers();
   }catch(error){
     console.error("Membres:",error);
@@ -935,6 +1026,7 @@ async function loadConversations(){
   try{
     const data=await api("/conversations");
     conversations=data.conversations || [];
+
     renderConversations();
   }catch(error){
     console.error("Discussions:",error);
@@ -946,12 +1038,15 @@ async function loadConversations(){
 function userId(user){
   return user.id || user.user_id || "";
 }
+
 function userName(user){
   return user.full_name || user.name || user.username || "Utilisateur";
 }
+
 function userUsername(user){
   return user.username || "";
 }
+
 function findConversationUser(conversation){
   return conversation.other_user ||
     conversation.friend ||
@@ -964,8 +1059,10 @@ function findConversationUser(conversation){
 function updateRequestCount(){
   const count=incomingRequests.length;
   const badge=$("requestCount");
+
   badge.textContent=count;
   badge.classList.toggle("hidden",count===0);
+
   document.querySelectorAll('.mobile-nav button[data-page="requests"]').forEach(btn=>{
     btn.title=count+" invitation(s)";
   });
@@ -977,27 +1074,34 @@ function renderMembers(){
   $("pageContent").innerHTML=`
     <h1 class="page-title">🌍 Membres NOVATALK</h1>
     <p class="page-desc">Découvre les personnes inscrites sur NOVATALK et envoie-leur une invitation.</p>
+
     <div class="toolbar">
       <input id="memberSearch" placeholder="Rechercher un membre..." oninput="filterMembers()">
     </div>
+
     <div id="memberResults"></div>
   `;
+
   filterMembers();
 }
 
 function filterMembers(){
   const input=$("memberSearch");
   if(!input)return;
+
   const q=input.value.toLowerCase();
 
   const filtered=members.filter(user=>{
     if(userId(user)===userId(currentUser))return false;
+
     const name=userName(user).toLowerCase();
     const username=userUsername(user).toLowerCase();
+
     return name.includes(q)||username.includes(q);
   });
 
   const container=$("memberResults");
+
   if(!filtered.length){
     container.innerHTML='<div class="empty"><div class="icon">🌍</div>Aucun membre trouvé.</div>';
     return;
@@ -1006,10 +1110,15 @@ function filterMembers(){
   container.innerHTML=filtered.map(user=>{
     const id=userId(user);
     const username=userUsername(user);
+
     const isFriend=friends.some(f=>userId(f)===id);
-    const alreadySent=user.request_sent===true || user.friend_request_sent===true;
+
+    const alreadySent=
+      user.request_sent===true ||
+      user.friend_request_sent===true;
 
     let action="";
+
     if(isFriend){
       action='<button class="action secondary" disabled>Déjà ami</button>';
     }else if(alreadySent){
@@ -1021,10 +1130,12 @@ function filterMembers(){
     return `
       <div class="card user-row">
         <div class="avatar">${escapeHTML(getInitial(userName(user)))}</div>
+
         <div class="user-details">
           <strong>${escapeHTML(userName(user))}</strong>
           <small>@${escapeHTML(username)}</small>
         </div>
+
         ${action}
       </div>
     `;
@@ -1035,14 +1146,18 @@ function filterMembers(){
 
 async function sendInvitation(username){
   if(!username)return toast("Identifiant du membre indisponible.");
+
   try{
     await api("/friend-requests",{
       method:"POST",
       body:JSON.stringify({username})
     });
+
     toast("Invitation envoyée !");
+
     await loadMembers();
     renderMembers();
+
   }catch(error){
     toast(error.message);
   }
@@ -1056,24 +1171,32 @@ function renderRequests(){
   `;
 
   const container=$("requestResults");
+
   if(!incomingRequests.length){
     container.innerHTML='<div class="empty"><div class="icon">📭</div>Aucune invitation pour le moment.</div>';
     return;
   }
 
   container.innerHTML=incomingRequests.map(request=>{
-    const sender=request.sender || request.from_user || request.user || {};
+    const sender=request.sender ||
+      request.from_user ||
+      request.user ||
+      {};
+
     const name=userName(sender);
     const username=userUsername(sender);
 
     return `
       <div class="card user-row">
         <div class="avatar">${escapeHTML(getInitial(name))}</div>
+
         <div class="user-details">
           <strong>${escapeHTML(name)}</strong>
           <small>@${escapeHTML(username)} souhaite devenir ton ami</small>
         </div>
+
         <button class="action" onclick="respondRequest('${escapeHTML(request.id)}','accept')">Accepter</button>
+
         <button class="action danger" onclick="respondRequest('${escapeHTML(request.id)}','reject')">Refuser</button>
       </div>
     `;
@@ -1086,9 +1209,17 @@ async function respondRequest(id,action){
       method:"POST",
       body:JSON.stringify({action})
     });
+
     toast(action==="accept"?"Invitation acceptée !":"Invitation refusée.");
-    await Promise.all([loadRequests(),loadFriends(),loadMembers()]);
+
+    await Promise.all([
+      loadRequests(),
+      loadFriends(),
+      loadMembers()
+    ]);
+
     renderRequests();
+
   }catch(error){
     toast(error.message);
   }
@@ -1104,23 +1235,27 @@ function renderFriends(){
   `;
 
   const container=$("friendResults");
+
   if(!friends.length){
     container.innerHTML=`
       <div class="empty">
         <div class="icon">🤝</div>
         Tu n'as pas encore d'amis.<br>
         Découvre les membres et envoie une invitation.
-      </div>`;
+      </div>
+    `;
     return;
   }
 
   container.innerHTML=friends.map(friend=>`
     <div class="card user-row">
       <div class="avatar">${escapeHTML(getInitial(userName(friend)))}</div>
+
       <div class="user-details">
         <strong>${escapeHTML(userName(friend))}</strong>
         <small>@${escapeHTML(userUsername(friend))}</small>
       </div>
+
       <button class="action" onclick="startConversation('${escapeHTML(userUsername(friend))}')">Message</button>
     </div>
   `).join("");
@@ -1143,26 +1278,40 @@ function renderConversations(){
         <div class="icon">💬</div>
         Aucune discussion.<br>
         Ajoute un membre pour commencer.
-      </div>`;
+      </div>
+    `;
     return;
   }
 
   container.innerHTML=conversations.map(conversation=>{
-    const other=findConversationUser(conversation);
     const title=conversationTitle(conversation);
-    const last=conversation.last_message || conversation.latest_message || {};
-    const preview=last.content || conversation.last_message_content || "Commencez à discuter";
+
+    const last=conversation.last_message ||
+      conversation.latest_message ||
+      {};
+
+    const preview=last.content ||
+      conversation.last_message_content ||
+      "Commencez à discuter";
+
     const unread=Number(conversation.unread_count || 0);
-    const date=last.created_at || conversation.updated_at || last.updated_at;
-    const selected=currentConversation && currentConversation.id===conversation.id;
+
+    const date=last.created_at ||
+      conversation.updated_at ||
+      last.updated_at;
+
+    const selected=currentConversation &&
+      currentConversation.id===conversation.id;
 
     return `
       <div class="chat-row ${selected?'selected':''}" onclick="openConversation('${escapeHTML(conversation.id)}')">
         <div class="avatar">${escapeHTML(getInitial(title))}</div>
+
         <div class="chat-preview">
           <strong>${escapeHTML(title)}</strong>
           <small>${escapeHTML(preview)}</small>
         </div>
+
         <div class="chat-meta">
           ${date?formatTime(date):""}
           ${unread?`<br><span class="badge">${unread}</span>`:""}
@@ -1174,16 +1323,23 @@ function renderConversations(){
 
 async function startConversation(username){
   if(!username)return toast("Identifiant de cet ami indisponible.");
+
   try{
     const data=await api("/conversations",{
       method:"POST",
       body:JSON.stringify({username})
     });
+
     const conversation=data.conversation || data;
-    if(!conversation.id)throw new Error("La conversation n'a pas pu être ouverte.");
+
+    if(!conversation.id){
+      throw new Error("La conversation n'a pas pu être ouverte.");
+    }
+
     await loadConversations();
     navigate("chats");
     await openConversation(conversation.id);
+
   }catch(error){
     toast(error.message);
   }
@@ -1195,16 +1351,21 @@ async function openConversation(id){
 
   currentConversation=conversation;
   replyTo=null;
+
   $("replyBar").classList.add("hidden");
 
   const other=findConversationUser(conversation);
+
   $("chatName").textContent=conversationTitle(conversation);
   $("chatUsername").textContent=other.username?"@"+other.username:"";
   $("chatAvatar").textContent=getInitial(conversationTitle(conversation));
 
   $("chatPage").classList.add("conversation-open");
+
   renderConversations();
+
   await loadMessages(false);
+
   $("messageInput").focus();
 }
 
@@ -1212,15 +1373,24 @@ async function openConversation(id){
 
 function formatTime(value){
   if(!value)return "";
+
   const date=new Date(value);
+
   if(Number.isNaN(date.getTime()))return "";
-  return date.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
+
+  return date.toLocaleTimeString("fr-FR",{
+    hour:"2-digit",
+    minute:"2-digit"
+  });
 }
 
 function formatDate(value){
   if(!value)return "";
+
   const date=new Date(value);
+
   if(Number.isNaN(date.getTime()))return "";
+
   return date.toLocaleDateString("fr-FR");
 }
 
@@ -1228,22 +1398,30 @@ async function loadMessages(silent=false){
   if(!currentConversation)return;
 
   try{
-    const data=await api("/conversations/"+encodeURIComponent(currentConversation.id)+"/messages");
+    const data=await api(
+      "/conversations/"+encodeURIComponent(currentConversation.id)+"/messages"
+    );
+
     const messages=data.messages || [];
 
     const oldLast=currentMessages.length
-      ? currentMessages[currentMessages.length-1].id
-      : null;
+      ?currentMessages[currentMessages.length-1].id
+      :null;
 
     currentMessages=messages;
+
     renderMessages();
 
-    const newLast=messages.length?messages[messages.length-1].id:null;
+    const newLast=messages.length
+      ?messages[messages.length-1].id
+      :null;
+
     if(!silent || oldLast!==newLast){
       $("messages").scrollTop=$("messages").scrollHeight;
     }
 
     if(!silent)await loadConversations();
+
   }catch(error){
     if(!silent)toast(error.message);
   }
@@ -1259,18 +1437,24 @@ function renderMessages(){
 
   container.innerHTML=currentMessages.map(message=>{
     const mine=String(message.sender_id)===String(userId(currentUser));
+
     const reply=message.reply_to;
     let replyHTML="";
 
     if(reply){
       const replied=currentMessages.find(m=>String(m.id)===String(reply));
+
       if(replied){
         replyHTML=`<div class="reply-preview">${escapeHTML(String(replied.content||"").slice(0,120))}</div>`;
       }
     }
 
     const deleted=Boolean(message.deleted_at);
-    const body=deleted?"Ce message a été supprimé.":message.content;
+
+    const body=deleted
+      ?"Ce message a été supprimé."
+      :message.content;
+
     const time=formatTime(message.created_at);
     const edited=message.edited_at?" · modifié":"";
     const read=mine?(message.is_read?" ✓✓":" ✓"):"";
@@ -1278,11 +1462,15 @@ function renderMessages(){
     return `
       <div class="message ${mine?'mine':''}">
         ${replyHTML}
+
         <div class="body">${escapeHTML(body)}</div>
+
         <span class="time">${escapeHTML(time)}${edited}${read}</span>
+
         ${!deleted?`
           <div class="message-actions">
             <button onclick="replyMessage('${escapeHTML(message.id)}')">Répondre</button>
+
             ${mine?`
               <button onclick="editMessage('${escapeHTML(message.id)}')">Modifier</button>
               <button onclick="deleteMessage('${escapeHTML(message.id)}')">Supprimer</button>
@@ -1294,40 +1482,57 @@ function renderMessages(){
   }).join("");
 }
 
+/* ENVOI DES MESSAGES */
+
 async function sendMessage(){
   if(!currentConversation)return toast("Choisis une discussion.");
 
   const input=$("messageInput");
   const content=input.value.trim();
+
   if(!content)return;
 
   const payload={content};
+
   if(replyTo)payload.reply_to=replyTo;
 
   input.disabled=true;
+
   try{
-    await api("/conversations/"+encodeURIComponent(currentConversation.id)+"/messages",{
-      method:"POST",
-      body:JSON.stringify(payload)
-    });
+    await api(
+      "/conversations/"+encodeURIComponent(currentConversation.id)+"/messages",
+      {
+        method:"POST",
+        body:JSON.stringify(payload)
+      }
+    );
 
     input.value="";
     cancelReply();
+
     await loadMessages(false);
     await loadConversations();
+
   }catch(error){
     toast(error.message);
+
   }finally{
     input.disabled=false;
     input.focus();
   }
 }
 
+/* RÉPONSES */
+
 function replyMessage(id){
   const message=currentMessages.find(m=>String(m.id)===String(id));
   if(!message)return;
+
   replyTo=id;
-  $("replyText").textContent="Réponse à : "+String(message.content||"").slice(0,100);
+
+  $("replyText").textContent=
+    "Réponse à : "+String(message.content||"").slice(0,100);
+
   $("replyBar").classList.remove("hidden");
   $("messageInput").focus();
 }
@@ -1337,25 +1542,38 @@ function cancelReply(){
   $("replyBar").classList.add("hidden");
 }
 
+/* MODIFICATION DES MESSAGES */
+
 async function editMessage(id){
   const message=currentMessages.find(m=>String(m.id)===String(id));
   if(!message)return;
 
-  const content=prompt("Modifier ton message :",message.content||"");
+  const content=prompt(
+    "Modifier ton message :",
+    message.content||""
+  );
+
   if(content===null)return;
-  if(!content.trim())return toast("Le message ne peut pas être vide.");
+
+  if(!content.trim()){
+    return toast("Le message ne peut pas être vide.");
+  }
 
   try{
     await api("/messages/"+encodeURIComponent(id),{
       method:"PATCH",
       body:JSON.stringify({content:content.trim()})
     });
+
     toast("Message modifié.");
     await loadMessages(false);
+
   }catch(error){
     toast(error.message);
   }
 }
+
+/* SUPPRESSION DES MESSAGES */
 
 async function deleteMessage(id){
   if(!confirm("Veux-tu vraiment supprimer ce message ?"))return;
@@ -1364,20 +1582,29 @@ async function deleteMessage(id){
     await api("/messages/"+encodeURIComponent(id),{
       method:"DELETE"
     });
+
     toast("Message supprimé.");
+
     await loadMessages(false);
     await loadConversations();
+
   }catch(error){
     toast(error.message);
   }
 }
 
+/* FERMER UNE CONVERSATION */
+
 function closeConversation(){
   currentConversation=null;
   replyTo=null;
+
   $("chatPage").classList.remove("conversation-open");
+
   renderConversations();
 }
+
+/* ENTRÉE POUR ENVOYER */
 
 $("messageInput").addEventListener("keydown",event=>{
   if(event.key==="Enter" && !event.shiftKey){
@@ -1389,6 +1616,7 @@ $("messageInput").addEventListener("keydown",event=>{
 /* DÉMARRAGE */
 
 restoreSession();
+
 </script>
 </body>
 </html>
