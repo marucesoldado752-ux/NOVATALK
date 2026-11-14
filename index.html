@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#071b16">
+<title>NOVATALK — Connect the World</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:Arial,sans-serif;
+  background:#071b16;
+  color:white;
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:20px;
+}
+.container{
+  width:100%;
+  max-width:420px;
+  background:#10251e;
+  border:1px solid #234638;
+  border-radius:22px;
+  padding:30px 24px;
+  box-shadow:0 15px 50px #0008;
+}
+.logo{
+  text-align:center;
+  font-size:36px;
+  font-weight:900;
+  color:#00e69a;
+  letter-spacing:2px;
+}
+.slogan{
+  text-align:center;
+  color:#a6c5b7;
+  margin:8px 0 25px;
+}
+h2{text-align:center;margin-bottom:22px}
+input{
+  width:100%;
+  padding:15px;
+  margin:8px 0;
+  border:1px solid #315847;
+  border-radius:11px;
+  background:#091a14;
+  color:white;
+  font-size:15px;
+  outline:none;
+}
+input:focus{border-color:#00e69a}
+button{
+  width:100%;
+  padding:15px;
+  margin-top:13px;
+  border:0;
+  border-radius:11px;
+  background:#00d991;
+  color:#062218;
+  font-size:16px;
+  font-weight:bold;
+  cursor:pointer;
+}
+button:disabled{opacity:.6}
+.switch{
+  text-align:center;
+  margin-top:20px;
+  color:#b6cfc3;
+  font-size:14px;
+}
+.switch span{
+  color:#00e69a;
+  cursor:pointer;
+  font-weight:bold;
+}
+.message{
+  margin-top:15px;
+  padding:12px;
+  border-radius:9px;
+  display:none;
+  font-size:14px;
+  line-height:1.5;
+}
+.error{background:#501d25;color:#ffb5bd}
+.success{background:#123e2c;color:#8effc4}
+.small{
+  text-align:center;
+  color:#79998a;
+  font-size:12px;
+  margin-top:25px;
+}
+.hidden{display:none}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="logo">NOVATALK 🌍</div>
+  <div class="slogan">Connect the World</div>
+
+  <div id="registerBox">
+    <h2>Créer un compte</h2>
+
+    <input id="fullName" type="text"
+      placeholder="Ton nom complet" autocomplete="name">
+
+    <input id="regUsername" type="text"
+      placeholder="Choisis un identifiant" autocomplete="username">
+
+    <input id="regPassword" type="password"
+      placeholder="Créer un mot de passe" autocomplete="new-password">
+
+    <input id="confirmPassword" type="password"
+      placeholder="Confirmer le mot de passe" autocomplete="new-password">
+
+    <button id="registerBtn" onclick="register()">Créer mon compte</button>
+
+    <div class="switch">
+      Tu as déjà un compte ?
+      <span onclick="showLogin()">Se connecter</span>
+    </div>
+  </div>
+
+  <div id="loginBox" class="hidden">
+    <h2>Bienvenue !</h2>
+
+    <input id="loginUsername" type="text"
+      placeholder="Ton identifiant" autocomplete="username">
+
+    <input id="loginPassword" type="password"
+      placeholder="Ton mot de passe" autocomplete="current-password">
+
+    <button id="loginBtn" onclick="login()">Se connecter</button>
+
+    <div class="switch">
+      Pas encore de compte ?
+      <span onclick="showRegister()">S'inscrire</span>
+    </div>
+  </div>
+
+  <div id="message" class="message"></div>
+
+  <div class="small">
+    NOVATALK © 2026<br>
+    Créé par MARUCE SOLDADO 🇬🇳
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+const API = "https://novatalk-2yui.onrender.com/api";
+
+function showMessage(text,type){
+  const box=document.getElementById("message");
+  box.textContent=text;
+  box.className="message "+type;
+  box.style.display="block";
+}
+
+function clearMessage(){
+  document.getElementById("message").style.display="none";
+}
+
+function showLogin(){
+  clearMessage();
+  document.getElementById("registerBox").classList.add("hidden");
+  document.getElementById("loginBox").classList.remove("hidden");
+}
+
+function showRegister(){
+  clearMessage();
+  document.getElementById("loginBox").classList.add("hidden");
+  document.getElementById("registerBox").classList.remove("hidden");
+}
+
+async function request(path,data){
+  const response=await fetch(API+path,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(data)
+  });
+
+  const result=await response.json().catch(()=>({}));
+  if(!response.ok || result.success===false){
+    throw new Error(result.message || result.error || "Une erreur est survenue.");
+  }
+  return result;
+}
+
+async function register(){
+  clearMessage();
+
+  const full_name=document.getElementById("fullName").value.trim();
+  const username=document.getElementById("regUsername").value.trim().toLowerCase();
+  const password=document.getElementById("regPassword").value;
+  const confirmation=document.getElementById("confirmPassword").value;
+
+  if(!full_name || !username || !password || !confirmation){
+    return showMessage("Remplis tous les champs.","error");
+  }
+
+  if(password!==confirmation){
+    return showMessage("Les mots de passe ne correspondent pas.","error");
+  }
+
+  if(password.length<8){
+    return showMessage("Le mot de passe doit contenir au moins 8 caractères.","error");
+  }
+
+  const btn=document.getElementById("registerBtn");
+  btn.disabled=true;
+  btn.textContent="Création en cours...";
+
+  try{
+    const result=await request("/auth/register",{
+      full_name,
+      username,
+      password
+    });
+
+    if(result.token){
+      localStorage.setItem("novatalk_token",result.token);
+    }
+
+    showMessage("Compte créé avec succès ! Bienvenue sur NOVATALK 🌍","success");
+  }catch(error){
+    showMessage(error.message,"error");
+  }finally{
+    btn.disabled=false;
+    btn.textContent="Créer mon compte";
+  }
+}
+
+async function login(){
+  clearMessage();
+
+  const username=document.getElementById("loginUsername").value.trim().toLowerCase();
+  const password=document.getElementById("loginPassword").value;
+
+  if(!username || !password){
+    return showMessage("Entre ton identifiant et ton mot de passe.","error");
+  }
+
+  const btn=document.getElementById("loginBtn");
+  btn.disabled=true;
+  btn.textContent="Connexion...";
+
+  try{
+    const result=await request("/auth/login",{
+      username,
+      password
+    });
+
+    if(result.token){
+      localStorage.setItem("novatalk_token",result.token);
+    }
+
+    showMessage("Connexion réussie ! Bienvenue sur NOVATALK 🌍","success");
+  }catch(error){
+    showMessage(error.message,"error");
+  }finally{
+    btn.disabled=false;
+    btn.textContent="Se connecter";
+  }
+}
+</script>
+
+</body>
+</html>
