@@ -4,272 +4,1503 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#071b16">
+
 <title>NOVATALK — Connect the World</title>
 
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{
-  font-family:Arial,sans-serif;
-  background:#071b16;
-  color:white;
-  min-height:100vh;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  padding:20px;
+:root {
+    --bg: #071b16;
+    --panel: #10251e;
+    --panel2: #0b2018;
+    --green: #00e69a;
+    --green2: #00bd7c;
+    --text: #ffffff;
+    --muted: #91b2a2;
+    --border: #234638;
+    --danger: #ff6575;
 }
-.container{
-  width:100%;
-  max-width:420px;
-  background:#10251e;
-  border:1px solid #234638;
-  border-radius:22px;
-  padding:30px 24px;
-  box-shadow:0 15px 50px #0008;
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
-.logo{
-  text-align:center;
-  font-size:36px;
-  font-weight:900;
-  color:#00e69a;
-  letter-spacing:2px;
+
+body {
+    font-family: Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
 }
-.slogan{
-  text-align:center;
-  color:#a6c5b7;
-  margin:8px 0 25px;
+
+button, input {
+    font: inherit;
 }
-h2{text-align:center;margin-bottom:22px}
-input{
-  width:100%;
-  padding:15px;
-  margin:8px 0;
-  border:1px solid #315847;
-  border-radius:11px;
-  background:#091a14;
-  color:white;
-  font-size:15px;
-  outline:none;
+
+button {
+    cursor: pointer;
 }
-input:focus{border-color:#00e69a}
-button{
-  width:100%;
-  padding:15px;
-  margin-top:13px;
-  border:0;
-  border-radius:11px;
-  background:#00d991;
-  color:#062218;
-  font-size:16px;
-  font-weight:bold;
-  cursor:pointer;
+
+.hidden {
+    display: none !important;
 }
-button:disabled{opacity:.6}
-.switch{
-  text-align:center;
-  margin-top:20px;
-  color:#b6cfc3;
-  font-size:14px;
+
+/* AUTHENTIFICATION */
+
+.auth-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
 }
-.switch span{
-  color:#00e69a;
-  cursor:pointer;
-  font-weight:bold;
+
+.auth-card {
+    width: 100%;
+    max-width: 420px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    padding: 30px 24px;
+    box-shadow: 0 15px 50px #0008;
 }
-.message{
-  margin-top:15px;
-  padding:12px;
-  border-radius:9px;
-  display:none;
-  font-size:14px;
-  line-height:1.5;
+
+.logo {
+    text-align: center;
+    font-size: 34px;
+    font-weight: 900;
+    color: var(--green);
+    letter-spacing: 2px;
 }
-.error{background:#501d25;color:#ffb5bd}
-.success{background:#123e2c;color:#8effc4}
-.small{
-  text-align:center;
-  color:#79998a;
-  font-size:12px;
-  margin-top:25px;
+
+.slogan {
+    text-align: center;
+    color: var(--muted);
+    margin: 8px 0 28px;
 }
-.hidden{display:none}
+
+h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+input {
+    width: 100%;
+    padding: 15px;
+    margin: 8px 0;
+    border: 1px solid #315847;
+    border-radius: 11px;
+    background: #091a14;
+    color: white;
+    outline: none;
+}
+
+input:focus {
+    border-color: var(--green);
+}
+
+.btn {
+    border: none;
+    border-radius: 11px;
+    padding: 14px;
+    font-weight: bold;
+}
+
+.primary {
+    background: var(--green);
+    color: #062218;
+}
+
+.secondary {
+    background: #173b2c;
+    color: white;
+}
+
+.full {
+    width: 100%;
+    margin-top: 12px;
+}
+
+.btn:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+}
+
+.switch {
+    text-align: center;
+    margin-top: 20px;
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.switch span {
+    color: var(--green);
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.notice {
+    margin-top: 14px;
+    padding: 12px;
+    border-radius: 9px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.error {
+    background: #501d25;
+    color: #ffb5bd;
+}
+
+.success {
+    background: #123e2c;
+    color: #8effc4;
+}
+
+.footer {
+    text-align: center;
+    color: #79998a;
+    font-size: 12px;
+    margin-top: 25px;
+}
+
+/* APPLICATION */
+
+.app {
+    display: none;
+    min-height: 100vh;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.sidebar {
+    width: 340px;
+    flex-shrink: 0;
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-header {
+    padding: 22px;
+    border-bottom: 1px solid var(--border);
+}
+
+.brand {
+    color: var(--green);
+    font-size: 24px;
+    font-weight: 900;
+}
+
+.brand small {
+    display: block;
+    color: var(--muted);
+    font-size: 11px;
+    margin-top: 5px;
+    font-weight: normal;
+}
+
+.profile {
+    margin-top: 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.avatar {
+    width: 43px;
+    height: 43px;
+    border-radius: 50%;
+    background: #075c3d;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: var(--green);
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.profile-info {
+    min-width: 0;
+    flex: 1;
+}
+
+.profile-info strong {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.profile-info small {
+    color: var(--muted);
+}
+
+.online-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: var(--green);
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+.search-area {
+    padding: 15px;
+    border-bottom: 1px solid var(--border);
+}
+
+.search-area input {
+    margin: 0;
+}
+
+.search-area button {
+    width: 100%;
+    margin-top: 8px;
+}
+
+.section-title {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: bold;
+    padding: 18px 16px 10px;
+    text-transform: uppercase;
+}
+
+.conversation-list {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.conversation {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid #ffffff08;
+}
+
+.conversation:hover,
+.conversation.active {
+    background: #174332;
+}
+
+.conversation-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.conversation-info strong {
+    display: block;
+    font-size: 14px;
+}
+
+.conversation-info small {
+    display: block;
+    color: var(--muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-top: 5px;
+}
+
+.sidebar-footer {
+    padding: 15px;
+    border-top: 1px solid var(--border);
+}
+
+.logout {
+    width: 100%;
+    background: #49232b;
+    color: #ffb7c0;
+    border: 0;
+    padding: 12px;
+    border-radius: 10px;
+}
+
+/* CHAT */
+
+.main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    background: #091a14;
+}
+
+.chat-header {
+    height: 76px;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+}
+
+.chat-header-info {
+    flex: 1;
+}
+
+.chat-header-info strong {
+    display: block;
+}
+
+.chat-header-info small {
+    color: var(--muted);
+}
+
+.messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.message-row {
+    display: flex;
+    flex-direction: column;
+    max-width: 78%;
+    align-self: flex-start;
+}
+
+.message-row.mine {
+    align-self: flex-end;
+}
+
+.bubble {
+    padding: 12px 15px;
+    border-radius: 15px;
+    background: #173a2b;
+    color: white;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+
+.mine .bubble {
+    background: #087c55;
+}
+
+.message-time {
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 5px;
+    padding: 0 5px;
+}
+
+.mine .message-time {
+    text-align: right;
+}
+
+.composer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 15px;
+    background: var(--panel);
+    border-top: 1px solid var(--border);
+}
+
+.composer input {
+    margin: 0;
+    flex: 1;
+}
+
+.send-btn {
+    width: 52px;
+    height: 48px;
+    border: 0;
+    border-radius: 12px;
+    background: var(--green);
+    color: #062218;
+    font-size: 21px;
+    font-weight: bold;
+}
+
+.empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 25px;
+    color: var(--muted);
+}
+
+.empty-state .big-logo {
+    font-size: 65px;
+    margin-bottom: 15px;
+}
+
+.empty-state h2 {
+    color: var(--green);
+    margin-bottom: 10px;
+}
+
+.empty-state p {
+    max-width: 320px;
+    line-height: 1.6;
+}
+
+.result-user {
+    background: #123527;
+    padding: 12px;
+    margin-top: 8px;
+    border-radius: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.result-user button {
+    border: 0;
+    background: var(--green);
+    color: #062218;
+    padding: 9px 12px;
+    border-radius: 8px;
+    font-weight: bold;
+}
+
+.status {
+    color: var(--muted);
+    font-size: 13px;
+    padding: 12px;
+    text-align: center;
+}
+
+.back-btn {
+    display: none;
+    background: #173b2c;
+    color: white;
+    border: 0;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+/* MOBILE */
+
+@media(max-width:700px) {
+    .app {
+        position: relative;
+    }
+
+    .sidebar {
+        width: 100%;
+        height: 100%;
+    }
+
+    .main {
+        position: absolute;
+        inset: 0;
+        display: none;
+        width: 100%;
+        height: 100%;
+    }
+
+    .app.chat-open .sidebar {
+        display: none;
+    }
+
+    .app.chat-open .main {
+        display: flex;
+    }
+
+    .back-btn {
+        display: block;
+    }
+
+    .messages {
+        padding: 15px;
+    }
+
+    .message-row {
+        max-width: 88%;
+    }
+}
 </style>
 </head>
 
 <body>
 
-<div class="container">
+<!-- ================= AUTHENTIFICATION ================= -->
 
-  <div class="logo">NOVATALK 🌍</div>
-  <div class="slogan">Connect the World</div>
+<div class="auth-page" id="authPage">
 
-  <div id="registerBox">
-    <h2>Créer un compte</h2>
+    <div class="auth-card">
 
-    <input id="fullName" type="text"
-      placeholder="Ton nom complet" autocomplete="name">
+        <div class="logo">NOVATALK 🌍</div>
+        <div class="slogan">Connect the World</div>
 
-    <input id="regUsername" type="text"
-      placeholder="Choisis un identifiant" autocomplete="username">
+        <div id="registerBox">
 
-    <input id="regPassword" type="password"
-      placeholder="Créer un mot de passe" autocomplete="new-password">
+            <h2>Créer un compte</h2>
 
-    <input id="confirmPassword" type="password"
-      placeholder="Confirmer le mot de passe" autocomplete="new-password">
+            <input id="fullName"
+                placeholder="Ton nom complet"
+                autocomplete="name">
 
-    <button id="registerBtn" onclick="register()">Créer mon compte</button>
+            <input id="regUsername"
+                placeholder="Choisis un identifiant"
+                autocomplete="username">
 
-    <div class="switch">
-      Tu as déjà un compte ?
-      <span onclick="showLogin()">Se connecter</span>
+            <input id="regPassword"
+                type="password"
+                placeholder="Créer un mot de passe"
+                autocomplete="new-password">
+
+            <input id="confirmPassword"
+                type="password"
+                placeholder="Confirmer le mot de passe"
+                autocomplete="new-password">
+
+            <button class="btn primary full"
+                id="registerBtn"
+                onclick="register()">
+                Créer mon compte
+            </button>
+
+            <div class="switch">
+                Tu as déjà un compte ?
+                <span onclick="showLogin()">Se connecter</span>
+            </div>
+
+        </div>
+
+        <div id="loginBox" class="hidden">
+
+            <h2>Bienvenue !</h2>
+
+            <input id="loginUsername"
+                placeholder="Ton identifiant"
+                autocomplete="username">
+
+            <input id="loginPassword"
+                type="password"
+                placeholder="Ton mot de passe"
+                autocomplete="current-password">
+
+            <button class="btn primary full"
+                id="loginBtn"
+                onclick="login()">
+                Se connecter
+            </button>
+
+            <div class="switch">
+                Pas encore de compte ?
+                <span onclick="showRegister()">S'inscrire</span>
+            </div>
+
+        </div>
+
+        <div id="authMessage" class="notice hidden"></div>
+
+        <div class="footer">
+            NOVATALK © 2026<br>
+            Créé par MARUCE SOLDADO 🇬🇳
+        </div>
+
     </div>
-  </div>
+</div>
 
-  <div id="loginBox" class="hidden">
-    <h2>Bienvenue !</h2>
 
-    <input id="loginUsername" type="text"
-      placeholder="Ton identifiant" autocomplete="username">
+<!-- ================= APPLICATION ================= -->
 
-    <input id="loginPassword" type="password"
-      placeholder="Ton mot de passe" autocomplete="current-password">
+<div class="app" id="app">
 
-    <button id="loginBtn" onclick="login()">Se connecter</button>
+    <aside class="sidebar">
 
-    <div class="switch">
-      Pas encore de compte ?
-      <span onclick="showRegister()">S'inscrire</span>
-    </div>
-  </div>
+        <div class="sidebar-header">
 
-  <div id="message" class="message"></div>
+            <div class="brand">
+                NOVATALK 🌍
+                <small>CONNECT THE WORLD</small>
+            </div>
 
-  <div class="small">
-    NOVATALK © 2026<br>
-    Créé par MARUCE SOLDADO 🇬🇳
-  </div>
+            <div class="profile">
+
+                <div class="avatar" id="profileAvatar">N</div>
+
+                <div class="profile-info">
+                    <strong id="profileName">Utilisateur</strong>
+                    <small>
+                        <span class="online-dot"></span>
+                        <span id="profileUsername">@user</span>
+                    </small>
+                </div>
+
+            </div>
+        </div>
+
+
+        <div class="search-area">
+
+            <input id="searchInput"
+                placeholder="Rechercher un identifiant..."
+                autocomplete="off">
+
+            <button class="btn primary"
+                onclick="searchUsers()">
+                🔎 Rechercher
+            </button>
+
+            <div id="searchResults"></div>
+
+        </div>
+
+
+        <div class="section-title">
+            Mes conversations
+        </div>
+
+        <div class="conversation-list" id="conversationList">
+            <div class="status">Chargement...</div>
+        </div>
+
+        <div class="sidebar-footer">
+
+            <button class="logout" onclick="logout()">
+                🚪 Déconnexion
+            </button>
+
+        </div>
+
+    </aside>
+
+
+    <main class="main">
+
+        <div class="empty-state" id="welcomeScreen">
+
+            <div class="big-logo">🌍</div>
+
+            <h2>Bienvenue sur NOVATALK</h2>
+
+            <p>
+                Connecte-toi avec le monde entier.
+                Recherche un utilisateur et commence
+                ta première conversation.
+            </p>
+
+        </div>
+
+
+        <div id="chatScreen" class="hidden"
+            style="display:flex;flex-direction:column;flex:1;min-height:0;">
+
+            <header class="chat-header">
+
+                <button class="back-btn" onclick="backToList()">
+                    ←
+                </button>
+
+                <div class="avatar" id="chatAvatar">U</div>
+
+                <div class="chat-header-info">
+                    <strong id="chatName">Utilisateur</strong>
+                    <small id="chatUsername">@user</small>
+                </div>
+
+            </header>
+
+
+            <div class="messages" id="messages">
+
+                <div class="status">
+                    Chargement des messages...
+                </div>
+
+            </div>
+
+
+            <form class="composer" id="messageForm">
+
+                <input id="messageInput"
+                    placeholder="Écrire un message..."
+                    maxlength="4000"
+                    autocomplete="off">
+
+                <button class="send-btn"
+                    id="sendBtn"
+                    type="submit">
+                    ➤
+                </button>
+
+            </form>
+
+        </div>
+
+    </main>
 
 </div>
+
 
 <script>
 "use strict";
 
+/* =====================================================
+   CONFIGURATION
+===================================================== */
+
 const API = "https://novatalk-2yui.onrender.com/api";
 
-function showMessage(text,type){
-  const box=document.getElementById("message");
-  box.textContent=text;
-  box.className="message "+type;
-  box.style.display="block";
+const TOKEN_KEY = "novatalk_token";
+
+let token = localStorage.getItem(TOKEN_KEY);
+
+let currentUser = null;
+let currentConversation = null;
+let currentPartner = null;
+
+let conversationTimer = null;
+let messageTimer = null;
+
+let lastMessageSignature = "";
+
+
+/* =====================================================
+   OUTILS
+===================================================== */
+
+function escapeText(value) {
+    return String(value ?? "");
 }
 
-function clearMessage(){
-  document.getElementById("message").style.display="none";
+function initials(name) {
+    return escapeText(name).trim().charAt(0).toUpperCase() || "N";
 }
 
-function showLogin(){
-  clearMessage();
-  document.getElementById("registerBox").classList.add("hidden");
-  document.getElementById("loginBox").classList.remove("hidden");
-}
+function dateFormat(date) {
+    if (!date) return "";
 
-function showRegister(){
-  clearMessage();
-  document.getElementById("loginBox").classList.add("hidden");
-  document.getElementById("registerBox").classList.remove("hidden");
-}
-
-async function request(path,data){
-  const response=await fetch(API+path,{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify(data)
-  });
-
-  const result=await response.json().catch(()=>({}));
-  if(!response.ok || result.success===false){
-    throw new Error(result.message || result.error || "Une erreur est survenue.");
-  }
-  return result;
-}
-
-async function register(){
-  clearMessage();
-
-  const full_name=document.getElementById("fullName").value.trim();
-  const username=document.getElementById("regUsername").value.trim().toLowerCase();
-  const password=document.getElementById("regPassword").value;
-  const confirmation=document.getElementById("confirmPassword").value;
-
-  if(!full_name || !username || !password || !confirmation){
-    return showMessage("Remplis tous les champs.","error");
-  }
-
-  if(password!==confirmation){
-    return showMessage("Les mots de passe ne correspondent pas.","error");
-  }
-
-  if(password.length<8){
-    return showMessage("Le mot de passe doit contenir au moins 8 caractères.","error");
-  }
-
-  const btn=document.getElementById("registerBtn");
-  btn.disabled=true;
-  btn.textContent="Création en cours...";
-
-  try{
-    const result=await request("/auth/register",{
-      full_name,
-      username,
-      password
+    return new Date(date).toLocaleTimeString("fr-FR", {
+        hour: "2-digit",
+        minute: "2-digit"
     });
+}
 
-    if(result.token){
-      localStorage.setItem("novatalk_token",result.token);
+function showAuthMessage(message, type) {
+    const box = document.getElementById("authMessage");
+
+    box.textContent = message;
+    box.className = "notice " + type;
+}
+
+function clearAuthMessage() {
+    document.getElementById("authMessage").className = "notice hidden";
+}
+
+function setButton(id, text, disabled) {
+    const button = document.getElementById(id);
+
+    button.textContent = text;
+    button.disabled = disabled;
+}
+
+
+/* =====================================================
+   COMMUNICATION API
+===================================================== */
+
+async function api(path, options = {}) {
+
+    const headers = {
+        "Content-Type": "application/json",
+        ...(options.headers || {})
+    };
+
+    if (token) {
+        headers.Authorization = "Bearer " + token;
     }
 
-    showMessage("Compte créé avec succès ! Bienvenue sur NOVATALK 🌍","success");
-  }catch(error){
-    showMessage(error.message,"error");
-  }finally{
-    btn.disabled=false;
-    btn.textContent="Créer mon compte";
-  }
-}
+    let response;
 
-async function login(){
-  clearMessage();
+    try {
 
-  const username=document.getElementById("loginUsername").value.trim().toLowerCase();
-  const password=document.getElementById("loginPassword").value;
+        response = await fetch(API + path, {
+            ...options,
+            headers
+        });
 
-  if(!username || !password){
-    return showMessage("Entre ton identifiant et ton mot de passe.","error");
-  }
+    } catch (error) {
 
-  const btn=document.getElementById("loginBtn");
-  btn.disabled=true;
-  btn.textContent="Connexion...";
-
-  try{
-    const result=await request("/auth/login",{
-      username,
-      password
-    });
-
-    if(result.token){
-      localStorage.setItem("novatalk_token",result.token);
+        throw new Error(
+            "Impossible de contacter NOVATALK. Vérifie ta connexion Internet."
+        );
     }
 
-    showMessage("Connexion réussie ! Bienvenue sur NOVATALK 🌍","success");
-  }catch(error){
-    showMessage(error.message,"error");
-  }finally{
-    btn.disabled=false;
-    btn.textContent="Se connecter";
-  }
+    const result = await response.json().catch(() => ({}));
+
+    if (!response.ok || result.success === false) {
+
+        if (response.status === 401) {
+            logout();
+        }
+
+        throw new Error(
+            result.message || "Une erreur est survenue."
+        );
+    }
+
+    return result;
 }
+
+
+/* =====================================================
+   AFFICHAGE AUTHENTIFICATION
+===================================================== */
+
+function showLogin() {
+
+    clearAuthMessage();
+
+    document.getElementById("registerBox")
+        .classList.add("hidden");
+
+    document.getElementById("loginBox")
+        .classList.remove("hidden");
+}
+
+function showRegister() {
+
+    clearAuthMessage();
+
+    document.getElementById("loginBox")
+        .classList.add("hidden");
+
+    document.getElementById("registerBox")
+        .classList.remove("hidden");
+}
+
+
+/* =====================================================
+   INSCRIPTION
+===================================================== */
+
+async function register() {
+
+    clearAuthMessage();
+
+    const full_name =
+        document.getElementById("fullName").value.trim();
+
+    const username =
+        document.getElementById("regUsername").value.trim().toLowerCase();
+
+    const password =
+        document.getElementById("regPassword").value;
+
+    const confirmation =
+        document.getElementById("confirmPassword").value;
+
+    if (!full_name || !username || !password || !confirmation) {
+        return showAuthMessage("Remplis tous les champs.", "error");
+    }
+
+    if (password !== confirmation) {
+        return showAuthMessage(
+            "Les mots de passe ne correspondent pas.",
+            "error"
+        );
+    }
+
+    if (password.length < 8) {
+        return showAuthMessage(
+            "Le mot de passe doit contenir au moins 8 caractères.",
+            "error"
+        );
+    }
+
+    setButton("registerBtn", "Création...", true);
+
+    try {
+
+        const result = await api("/auth/register", {
+            method: "POST",
+            body: JSON.stringify({
+                full_name,
+                username,
+                password
+            })
+        });
+
+        if (!result.token) {
+            throw new Error("Token de connexion manquant.");
+        }
+
+        token = result.token;
+
+        localStorage.setItem(TOKEN_KEY, token);
+
+        await openApplication(result.user);
+
+    } catch (error) {
+
+        showAuthMessage(error.message, "error");
+
+    } finally {
+
+        setButton("registerBtn", "Créer mon compte", false);
+    }
+}
+
+
+/* =====================================================
+   CONNEXION
+===================================================== */
+
+async function login() {
+
+    clearAuthMessage();
+
+    const username =
+        document.getElementById("loginUsername").value.trim().toLowerCase();
+
+    const password =
+        document.getElementById("loginPassword").value;
+
+    if (!username || !password) {
+        return showAuthMessage(
+            "Entre ton identifiant et ton mot de passe.",
+            "error"
+        );
+    }
+
+    setButton("loginBtn", "Connexion...", true);
+
+    try {
+
+        const result = await api("/auth/login", {
+            method: "POST",
+            body: JSON.stringify({
+                username,
+                password
+            })
+        });
+
+        if (!result.token) {
+            throw new Error("Token de connexion manquant.");
+        }
+
+        token = result.token;
+
+        localStorage.setItem(TOKEN_KEY, token);
+
+        await openApplication(result.user);
+
+    } catch (error) {
+
+        showAuthMessage(error.message, "error");
+
+    } finally {
+
+        setButton("loginBtn", "Se connecter", false);
+    }
+}
+
+
+/* =====================================================
+   OUVRIR L'APPLICATION
+===================================================== */
+
+async function openApplication(user) {
+
+    currentUser = user;
+
+    document.getElementById("authPage").style.display = "none";
+
+    document.getElementById("app").style.display = "flex";
+
+    document.getElementById("profileName").textContent =
+        user.full_name;
+
+    document.getElementById("profileUsername").textContent =
+        "@" + user.username;
+
+    document.getElementById("profileAvatar").textContent =
+        initials(user.full_name);
+
+    await loadConversations();
+
+    clearInterval(conversationTimer);
+
+    conversationTimer = setInterval(() => {
+        loadConversations();
+    }, 10000);
+}
+
+
+/* =====================================================
+   RECHERCHE UTILISATEURS
+===================================================== */
+
+async function searchUsers() {
+
+    const query = document.getElementById("searchInput")
+        .value.trim().toLowerCase();
+
+    const results = document.getElementById("searchResults");
+
+    results.innerHTML = "";
+
+    if (query.length < 3) {
+
+        results.textContent =
+            "Saisis au moins 3 caractères.";
+
+        results.className = "status";
+
+        return;
+    }
+
+    results.textContent = "Recherche...";
+
+    try {
+
+        const result = await api(
+            "/users/search?q=" + encodeURIComponent(query)
+        );
+
+        results.innerHTML = "";
+
+        if (!result.users || result.users.length === 0) {
+
+            results.textContent = "Aucun utilisateur trouvé.";
+
+            results.className = "status";
+
+            return;
+        }
+
+        result.users.forEach(user => {
+
+            const item = document.createElement("div");
+
+            item.className = "result-user";
+
+            const info = document.createElement("div");
+
+            const name = document.createElement("strong");
+
+            name.textContent = user.full_name;
+
+            const username = document.createElement("small");
+
+            username.textContent = "@" + user.username;
+
+            info.append(name, username);
+
+            const button = document.createElement("button");
+
+            button.textContent = "Discuter";
+
+            button.onclick = () => startConversation(user.username);
+
+            item.append(info, button);
+
+            results.appendChild(item);
+        });
+
+    } catch (error) {
+
+        results.textContent = error.message;
+
+        results.className = "status";
+    }
+}
+
+
+/* =====================================================
+   CRÉER UNE CONVERSATION
+===================================================== */
+
+async function startConversation(username) {
+
+    try {
+
+        const result = await api("/conversations", {
+            method: "POST",
+            body: JSON.stringify({
+                username
+            })
+        });
+
+        const partner = result.user;
+
+        await loadConversations();
+
+        await openConversation(
+            result.conversation_id,
+            partner
+        );
+
+        document.getElementById("searchResults").innerHTML = "";
+
+        document.getElementById("searchInput").value = "";
+
+    } catch (error) {
+
+        alert(error.message);
+    }
+}
+
+
+/* =====================================================
+   CHARGER LES CONVERSATIONS
+===================================================== */
+
+async function loadConversations() {
+
+    try {
+
+        const result = await api("/conversations");
+
+        const list = document.getElementById("conversationList");
+
+        const conversations = result.conversations || [];
+
+        list.innerHTML = "";
+
+        if (conversations.length === 0) {
+
+            const empty = document.createElement("div");
+
+            empty.className = "status";
+
+            empty.textContent =
+                "Aucune conversation. Recherche un utilisateur pour commencer.";
+
+            list.appendChild(empty);
+
+            return;
+        }
+
+        conversations.forEach(conversation => {
+
+            const user = conversation.user;
+
+            const item = document.createElement("div");
+
+            item.className = "conversation";
+
+            if (
+                currentConversation === conversation.conversation_id
+            ) {
+                item.classList.add("active");
+            }
+
+            const avatar = document.createElement("div");
+
+            avatar.className = "avatar";
+
+            avatar.textContent = initials(user.full_name);
+
+            const info = document.createElement("div");
+
+            info.className = "conversation-info";
+
+            const name = document.createElement("strong");
+
+            name.textContent = user.full_name;
+
+            const last = document.createElement("small");
+
+            last.textContent = conversation.last_message
+                ? conversation.last_message.content
+                : "Nouvelle conversation";
+
+            info.append(name, last);
+
+            item.append(avatar, info);
+
+            item.onclick = () => {
+                openConversation(
+                    conversation.conversation_id,
+                    user
+                );
+            };
+
+            list.appendChild(item);
+        });
+
+    } catch (error) {
+
+        console.error("CONVERSATIONS:", error.message);
+    }
+}
+
+
+/* =====================================================
+   OUVRIR UNE DISCUSSION
+===================================================== */
+
+async function openConversation(id, partner) {
+
+    currentConversation = id;
+    currentPartner = partner;
+
+    lastMessageSignature = "";
+
+    document.getElementById("welcomeScreen")
+        .classList.add("hidden");
+
+    document.getElementById("chatScreen")
+        .classList.remove("hidden");
+
+    document.getElementById("chatName").textContent =
+        partner.full_name;
+
+    document.getElementById("chatUsername").textContent =
+        "@" + partner.username;
+
+    document.getElementById("chatAvatar").textContent =
+        initials(partner.full_name);
+
+    document.getElementById("app").classList.add("chat-open");
+
+    await loadMessages();
+
+    clearInterval(messageTimer);
+
+    messageTimer = setInterval(() => {
+
+        if (currentConversation === id) {
+            loadMessages();
+        }
+
+    }, 4000);
+
+    loadConversations();
+}
+
+
+/* =====================================================
+   CHARGER LES MESSAGES
+===================================================== */
+
+async function loadMessages() {
+
+    if (!currentConversation) return;
+
+    const id = currentConversation;
+
+    try {
+
+        const result = await api(
+            "/conversations/" + encodeURIComponent(id) + "/messages"
+        );
+
+        if (currentConversation !== id) return;
+
+        const messages = result.messages || [];
+
+        const signature = messages.map(message =>
+            message.id + ":" + message.is_read
+        ).join("|");
+
+        if (signature === lastMessageSignature) return;
+
+        lastMessageSignature = signature;
+
+        const box = document.getElementById("messages");
+
+        box.innerHTML = "";
+
+        if (messages.length === 0) {
+
+            const empty = document.createElement("div");
+
+            empty.className = "status";
+
+            empty.textContent =
+                "C'est le début de votre conversation. Envoyez votre premier message !";
+
+            box.appendChild(empty);
+
+            return;
+        }
+
+        messages.forEach(message => {
+
+            const row = document.createElement("div");
+
+            const mine = message.sender_id === currentUser.id;
+
+            row.className = "message-row" + (mine ? " mine" : "");
+
+            const bubble = document.createElement("div");
+
+            bubble.className = "bubble";
+
+            bubble.textContent = message.content;
+
+            const time = document.createElement("div");
+
+            time.className = "message-time";
+
+            time.textContent = dateFormat(message.created_at);
+
+            row.append(bubble, time);
+
+            box.appendChild(row);
+        });
+
+        box.scrollTop = box.scrollHeight;
+
+    } catch (error) {
+
+        console.error("MESSAGES:", error.message);
+    }
+}
+
+
+/* =====================================================
+   ENVOYER UN MESSAGE
+===================================================== */
+
+document.getElementById("messageForm")
+    .addEventListener("submit", async event => {
+
+        event.preventDefault();
+
+        if (!currentConversation) return;
+
+        const input = document.getElementById("messageInput");
+
+        const content = input.value.trim();
+
+        if (!content) return;
+
+        const id = currentConversation;
+
+        const button = document.getElementById("sendBtn");
+
+        button.disabled = true;
+
+        try {
+
+            await api(
+                "/conversations/" + encodeURIComponent(id) + "/messages",
+                {
+                    method: "POST",
+                    body: JSON.stringify({
+                        content
+                    })
+                }
+            );
+
+            input.value = "";
+
+            lastMessageSignature = "";
+
+            await loadMessages();
+
+            await loadConversations();
+
+            input.focus();
+
+        } catch (error) {
+
+            alert(error.message);
+
+        } finally {
+
+            button.disabled = false;
+        }
+    });
+
+
+/* =====================================================
+   RETOUR AUX CONVERSATIONS
+===================================================== */
+
+function backToList() {
+
+    document.getElementById("app")
+        .classList.remove("chat-open");
+
+    clearInterval(messageTimer);
+
+    currentConversation = null;
+
+    currentPartner = null;
+
+    loadConversations();
+}
+
+
+/* =====================================================
+   DÉCONNEXION
+===================================================== */
+
+function logout() {
+
+    clearInterval(conversationTimer);
+
+    clearInterval(messageTimer);
+
+    localStorage.removeItem(TOKEN_KEY);
+
+    token = null;
+
+    currentUser = null;
+
+    currentConversation = null;
+
+    currentPartner = null;
+
+    document.getElementById("app").style.display = "none";
+
+    document.getElementById("authPage").style.display = "flex";
+
+    document.getElementById("app").classList.remove("chat-open");
+
+    showLogin();
+}
+
+
+/* =====================================================
+   RESTAURER LA SESSION
+===================================================== */
+
+async function restoreSession() {
+
+    if (!token) return;
+
+    try {
+
+        const result = await api("/auth/me");
+
+        await openApplication(result.user);
+
+    } catch (error) {
+
+        localStorage.removeItem(TOKEN_KEY);
+
+        token = null;
+    }
+}
+
+
+/* =====================================================
+   INITIALISATION
+===================================================== */
+
+document.getElementById("searchInput")
+    .addEventListener("keydown", event => {
+
+        if (event.key === "Enter") {
+            searchUsers();
+        }
+    });
+
+restoreSession();
+
 </script>
 
 </body>
