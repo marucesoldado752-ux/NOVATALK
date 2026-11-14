@@ -4,1504 +4,1391 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#071b16">
-
 <title>NOVATALK — Connect the World</title>
 
 <style>
-:root {
-    --bg: #071b16;
-    --panel: #10251e;
-    --panel2: #0b2018;
-    --green: #00e69a;
-    --green2: #00bd7c;
-    --text: #ffffff;
-    --muted: #91b2a2;
-    --border: #234638;
-    --danger: #ff6575;
-}
-
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
-
-body {
-    font-family: Arial, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-}
-
-button, input {
-    font: inherit;
-}
-
-button {
-    cursor: pointer;
-}
-
-.hidden {
-    display: none !important;
-}
-
-/* AUTHENTIFICATION */
-
-.auth-page {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-}
-
-.auth-card {
-    width: 100%;
-    max-width: 420px;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 22px;
-    padding: 30px 24px;
-    box-shadow: 0 15px 50px #0008;
-}
-
-.logo {
-    text-align: center;
-    font-size: 34px;
-    font-weight: 900;
-    color: var(--green);
-    letter-spacing: 2px;
-}
-
-.slogan {
-    text-align: center;
-    color: var(--muted);
-    margin: 8px 0 28px;
-}
-
-h2 {
-    text-align: center;
-    margin-bottom: 20px;
-}
-
-input {
-    width: 100%;
-    padding: 15px;
-    margin: 8px 0;
-    border: 1px solid #315847;
-    border-radius: 11px;
-    background: #091a14;
-    color: white;
-    outline: none;
-}
-
-input:focus {
-    border-color: var(--green);
-}
-
-.btn {
-    border: none;
-    border-radius: 11px;
-    padding: 14px;
-    font-weight: bold;
-}
-
-.primary {
-    background: var(--green);
-    color: #062218;
-}
-
-.secondary {
-    background: #173b2c;
-    color: white;
-}
-
-.full {
-    width: 100%;
-    margin-top: 12px;
-}
-
-.btn:disabled {
-    opacity: .5;
-    cursor: not-allowed;
-}
-
-.switch {
-    text-align: center;
-    margin-top: 20px;
-    color: var(--muted);
-    font-size: 14px;
-}
-
-.switch span {
-    color: var(--green);
-    cursor: pointer;
-    font-weight: bold;
-}
-
-.notice {
-    margin-top: 14px;
-    padding: 12px;
-    border-radius: 9px;
-    font-size: 14px;
-    line-height: 1.5;
-}
-
-.error {
-    background: #501d25;
-    color: #ffb5bd;
-}
-
-.success {
-    background: #123e2c;
-    color: #8effc4;
-}
-
-.footer {
-    text-align: center;
-    color: #79998a;
-    font-size: 12px;
-    margin-top: 25px;
-}
-
-/* APPLICATION */
-
-.app {
-    display: none;
-    min-height: 100vh;
-    height: 100vh;
-    overflow: hidden;
-}
-
-.sidebar {
-    width: 340px;
-    flex-shrink: 0;
-    background: var(--panel);
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-}
-
-.sidebar-header {
-    padding: 22px;
-    border-bottom: 1px solid var(--border);
-}
-
-.brand {
-    color: var(--green);
-    font-size: 24px;
-    font-weight: 900;
-}
-
-.brand small {
-    display: block;
-    color: var(--muted);
-    font-size: 11px;
-    margin-top: 5px;
-    font-weight: normal;
-}
-
-.profile {
-    margin-top: 18px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.avatar {
-    width: 43px;
-    height: 43px;
-    border-radius: 50%;
-    background: #075c3d;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: var(--green);
-    font-weight: bold;
-    flex-shrink: 0;
-}
-
-.profile-info {
-    min-width: 0;
-    flex: 1;
-}
-
-.profile-info strong {
-    display: block;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.profile-info small {
-    color: var(--muted);
-}
-
-.online-dot {
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    background: var(--green);
-    border-radius: 50%;
-    margin-right: 5px;
-}
-
-.search-area {
-    padding: 15px;
-    border-bottom: 1px solid var(--border);
-}
-
-.search-area input {
-    margin: 0;
-}
-
-.search-area button {
-    width: 100%;
-    margin-top: 8px;
-}
-
-.section-title {
-    color: var(--muted);
-    font-size: 12px;
-    font-weight: bold;
-    padding: 18px 16px 10px;
-    text-transform: uppercase;
-}
-
-.conversation-list {
-    flex: 1;
-    overflow-y: auto;
-}
-
-.conversation {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 14px 16px;
-    cursor: pointer;
-    border-bottom: 1px solid #ffffff08;
-}
-
-.conversation:hover,
-.conversation.active {
-    background: #174332;
-}
-
-.conversation-info {
-    flex: 1;
-    min-width: 0;
-}
-
-.conversation-info strong {
-    display: block;
-    font-size: 14px;
-}
-
-.conversation-info small {
-    display: block;
-    color: var(--muted);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    margin-top: 5px;
-}
-
-.sidebar-footer {
-    padding: 15px;
-    border-top: 1px solid var(--border);
-}
-
-.logout {
-    width: 100%;
-    background: #49232b;
-    color: #ffb7c0;
-    border: 0;
-    padding: 12px;
-    border-radius: 10px;
-}
-
-/* CHAT */
-
-.main {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    background: #091a14;
-}
-
-.chat-header {
-    height: 76px;
-    padding: 12px 20px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: var(--panel);
-    border-bottom: 1px solid var(--border);
-}
-
-.chat-header-info {
-    flex: 1;
-}
-
-.chat-header-info strong {
-    display: block;
-}
-
-.chat-header-info small {
-    color: var(--muted);
-}
-
-.messages {
-    flex: 1;
-    overflow-y: auto;
-    padding: 22px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.message-row {
-    display: flex;
-    flex-direction: column;
-    max-width: 78%;
-    align-self: flex-start;
-}
-
-.message-row.mine {
-    align-self: flex-end;
-}
-
-.bubble {
-    padding: 12px 15px;
-    border-radius: 15px;
-    background: #173a2b;
-    color: white;
-    line-height: 1.5;
-    overflow-wrap: anywhere;
-    white-space: pre-wrap;
-}
-
-.mine .bubble {
-    background: #087c55;
-}
-
-.message-time {
-    font-size: 10px;
-    color: var(--muted);
-    margin-top: 5px;
-    padding: 0 5px;
-}
-
-.mine .message-time {
-    text-align: right;
-}
-
-.composer {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 15px;
-    background: var(--panel);
-    border-top: 1px solid var(--border);
-}
-
-.composer input {
-    margin: 0;
-    flex: 1;
-}
-
-.send-btn {
-    width: 52px;
-    height: 48px;
-    border: 0;
-    border-radius: 12px;
-    background: var(--green);
-    color: #062218;
-    font-size: 21px;
-    font-weight: bold;
-}
-
-.empty-state {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    padding: 25px;
-    color: var(--muted);
-}
-
-.empty-state .big-logo {
-    font-size: 65px;
-    margin-bottom: 15px;
-}
-
-.empty-state h2 {
-    color: var(--green);
-    margin-bottom: 10px;
-}
-
-.empty-state p {
-    max-width: 320px;
-    line-height: 1.6;
-}
-
-.result-user {
-    background: #123527;
-    padding: 12px;
-    margin-top: 8px;
-    border-radius: 10px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 10px;
-}
-
-.result-user button {
-    border: 0;
-    background: var(--green);
-    color: #062218;
-    padding: 9px 12px;
-    border-radius: 8px;
-    font-weight: bold;
-}
-
-.status {
-    color: var(--muted);
-    font-size: 13px;
-    padding: 12px;
-    text-align: center;
-}
-
-.back-btn {
-    display: none;
-    background: #173b2c;
-    color: white;
-    border: 0;
-    padding: 10px;
-    border-radius: 8px;
-}
-
-/* MOBILE */
-
-@media(max-width:700px) {
-    .app {
-        position: relative;
-    }
-
-    .sidebar {
-        width: 100%;
-        height: 100%;
-    }
-
-    .main {
-        position: absolute;
-        inset: 0;
-        display: none;
-        width: 100%;
-        height: 100%;
-    }
-
-    .app.chat-open .sidebar {
-        display: none;
-    }
-
-    .app.chat-open .main {
-        display: flex;
-    }
-
-    .back-btn {
-        display: block;
-    }
-
-    .messages {
-        padding: 15px;
-    }
-
-    .message-row {
-        max-width: 88%;
-    }
+:root{
+  --bg:#071b16;
+  --panel:#0d2921;
+  --panel2:#102f26;
+  --green:#00d68f;
+  --green2:#00a86b;
+  --text:#f2fff9;
+  --muted:#9ab8aa;
+  --border:rgba(255,255,255,.09);
+  --danger:#ff5364;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:Arial,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+}
+button,input{font:inherit}
+button{cursor:pointer}
+.hidden{display:none!important}
+#authScreen{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  background:radial-gradient(circle at top,#123d2d,var(--bg) 65%);
+}
+.auth-box{
+  width:100%;
+  max-width:420px;
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:22px;
+  padding:28px;
+  box-shadow:0 20px 70px #0005;
+}
+.logo{
+  text-align:center;
+  font-size:34px;
+  font-weight:900;
+  color:var(--green);
+  letter-spacing:1px;
+}
+.subtitle{
+  text-align:center;
+  color:var(--muted);
+  margin:8px 0 25px;
+  font-size:13px;
+}
+.auth-box h2{margin-bottom:18px;text-align:center}
+.field{margin-bottom:13px}
+.field label{
+  display:block;
+  font-size:13px;
+  color:var(--muted);
+  margin-bottom:7px;
+}
+.field input{
+  width:100%;
+  padding:14px;
+  border-radius:11px;
+  background:#061a14;
+  border:1px solid var(--border);
+  color:white;
+  outline:none;
+}
+.field input:focus{border-color:var(--green)}
+.primary{
+  width:100%;
+  border:0;
+  border-radius:11px;
+  padding:14px;
+  background:var(--green);
+  color:#052016;
+  font-weight:800;
+  margin-top:8px;
+}
+.primary:disabled{opacity:.5;cursor:wait}
+.switch{
+  text-align:center;
+  color:var(--muted);
+  font-size:13px;
+  margin-top:18px;
+}
+.switch button{
+  border:0;
+  background:none;
+  color:var(--green);
+  font-weight:bold;
+}
+#app{
+  min-height:100vh;
+  display:grid;
+  grid-template-columns:260px 1fr;
+}
+.sidebar{
+  background:#091f18;
+  border-right:1px solid var(--border);
+  padding:20px 14px;
+  display:flex;
+  flex-direction:column;
+  min-height:100vh;
+}
+.brand{
+  font-size:23px;
+  font-weight:900;
+  color:var(--green);
+  padding:10px 12px 4px;
+}
+.brand-sub{
+  color:var(--muted);
+  font-size:10px;
+  letter-spacing:2px;
+  padding:0 12px 25px;
+}
+.profile{
+  display:flex;
+  align-items:center;
+  gap:11px;
+  padding:13px 10px;
+  background:var(--panel);
+  border-radius:13px;
+  margin-bottom:20px;
+}
+.avatar{
+  width:42px;height:42px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-shrink:0;
+  background:linear-gradient(135deg,#00d68f,#087c58);
+  color:#052016;
+  font-weight:900;
+}
+.profile-info{min-width:0}
+.profile-info strong{
+  display:block;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.profile-info small{color:var(--muted)}
+.nav-title{
+  font-size:10px;
+  color:#739789;
+  padding:12px;
+  letter-spacing:1.5px;
+}
+.nav-btn{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  width:100%;
+  padding:13px 12px;
+  margin-bottom:5px;
+  background:transparent;
+  color:#c4ddd1;
+  border:0;
+  border-radius:10px;
+  text-align:left;
+}
+.nav-btn:hover,.nav-btn.active{
+  background:#12382b;
+  color:var(--green);
+}
+.nav-btn .count{
+  margin-left:auto;
+  background:var(--green);
+  color:#052016;
+  font-size:11px;
+  font-weight:bold;
+  border-radius:20px;
+  min-width:20px;
+  padding:3px 6px;
+  text-align:center;
+}
+.logout{
+  margin-top:auto;
+  color:#ff8790;
+}
+.main{min-width:0}
+.topbar{
+  height:70px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 25px;
+  border-bottom:1px solid var(--border);
+  background:#091f18;
+  position:sticky;
+  top:0;
+  z-index:5;
+}
+.topbar h2{font-size:19px}
+.topbar small{color:var(--muted)}
+.content{
+  padding:25px;
+  max-width:1100px;
+  margin:auto;
+}
+.page-title{font-size:25px;margin-bottom:7px}
+.page-desc{color:var(--muted);font-size:13px;margin-bottom:22px}
+.toolbar{
+  display:flex;
+  gap:10px;
+  margin-bottom:18px;
+}
+.toolbar input{
+  flex:1;
+  min-width:0;
+  background:var(--panel);
+  border:1px solid var(--border);
+  color:white;
+  border-radius:10px;
+  padding:13px;
+  outline:none;
+}
+.card{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:15px;
+  padding:15px;
+  margin-bottom:11px;
+}
+.user-row,.chat-row{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-width:0;
+}
+.user-details{flex:1;min-width:0}
+.user-details strong{
+  display:block;
+  margin-bottom:5px;
+}
+.user-details small{
+  display:block;
+  color:var(--muted);
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.action{
+  border:0;
+  border-radius:9px;
+  padding:9px 12px;
+  font-size:12px;
+  font-weight:bold;
+  background:var(--green);
+  color:#052016;
+}
+.action.secondary{
+  background:#214438;
+  color:#dfffee;
+}
+.action.danger{
+  background:#51242c;
+  color:#ffb4bb;
+}
+.empty{
+  text-align:center;
+  padding:50px 15px;
+  color:var(--muted);
+}
+.empty .icon{font-size:35px;margin-bottom:12px}
+.chat-layout{
+  display:grid;
+  grid-template-columns:320px 1fr;
+  height:calc(100vh - 70px);
+  min-height:500px;
+}
+.chat-list{
+  border-right:1px solid var(--border);
+  overflow-y:auto;
+  padding:15px;
+}
+.chat-list h3{margin:8px 5px 15px}
+.chat-row{
+  padding:12px 9px;
+  border-radius:12px;
+  cursor:pointer;
+  margin-bottom:4px;
+}
+.chat-row:hover,.chat-row.selected{background:#153b2e}
+.chat-preview{flex:1;min-width:0}
+.chat-preview strong{
+  display:block;
+  font-size:14px;
+  margin-bottom:5px;
+}
+.chat-preview small{
+  color:var(--muted);
+  display:block;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.chat-meta{
+  text-align:right;
+  font-size:10px;
+  color:var(--muted);
+}
+.badge{
+  display:inline-block;
+  background:var(--green);
+  color:#052016;
+  font-weight:bold;
+  font-size:10px;
+  padding:4px 7px;
+  border-radius:20px;
+  margin-top:6px;
+}
+.chat-window{
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+  background:#081e17;
+}
+.chat-header{
+  display:flex;
+  align-items:center;
+  gap:11px;
+  padding:13px 18px;
+  border-bottom:1px solid var(--border);
+  min-height:65px;
+}
+.chat-header strong{display:block}
+.chat-header small{color:var(--muted)}
+.messages{
+  flex:1;
+  overflow-y:auto;
+  padding:20px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.message{
+  max-width:78%;
+  padding:11px 13px;
+  border-radius:14px;
+  background:#15382d;
+  align-self:flex-start;
+  overflow-wrap:anywhere;
+  position:relative;
+}
+.message.mine{
+  align-self:flex-end;
+  background:#075e46;
+  border-bottom-right-radius:4px;
+}
+.message:not(.mine){border-bottom-left-radius:4px}
+.message .body{white-space:pre-wrap;line-height:1.45}
+.message .time{
+  display:block;
+  text-align:right;
+  color:#b3d4c6;
+  font-size:10px;
+  margin-top:6px;
+}
+.message .reply-preview{
+  padding:7px;
+  border-left:3px solid var(--green);
+  background:#0002;
+  border-radius:5px;
+  margin-bottom:8px;
+  font-size:12px;
+  color:#c5e5d6;
+}
+.message-actions{
+  display:flex;
+  gap:8px;
+  justify-content:flex-end;
+  margin-top:7px;
+}
+.message-actions button{
+  background:none;
+  border:0;
+  color:#b6d9c8;
+  font-size:11px;
+}
+.composer{
+  padding:13px;
+  border-top:1px solid var(--border);
+  display:flex;
+  gap:9px;
+  align-items:center;
+}
+.composer input{
+  flex:1;
+  min-width:0;
+  background:#102c22;
+  color:white;
+  border:1px solid var(--border);
+  border-radius:25px;
+  padding:13px 17px;
+  outline:none;
+}
+.send-btn{
+  border:0;
+  background:var(--green);
+  color:#052016;
+  width:44px;height:44px;
+  border-radius:50%;
+  font-weight:bold;
+}
+.reply-bar{
+  padding:8px 15px;
+  background:#15382d;
+  color:#d5f7e5;
+  font-size:12px;
+  display:flex;
+  justify-content:space-between;
+}
+.reply-bar button{
+  background:none;border:0;color:white;
+}
+.notice{
+  padding:12px;
+  border-radius:10px;
+  margin-bottom:15px;
+  font-size:13px;
+  display:none;
+}
+.notice.error{background:#51242c;color:#ffd6da}
+.notice.success{background:#124633;color:#c7ffe3}
+.mobile-nav{display:none}
+#toast{
+  position:fixed;
+  bottom:25px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#eafff3;
+  color:#052016;
+  padding:12px 18px;
+  border-radius:10px;
+  font-size:13px;
+  font-weight:bold;
+  z-index:30;
+  box-shadow:0 8px 30px #0005;
+  display:none;
+  max-width:90%;
+  text-align:center;
+}
+@media(max-width:800px){
+  #app{display:block;padding-bottom:65px}
+  .sidebar{display:none}
+  .topbar{height:60px;padding:0 15px}
+  .content{padding:17px}
+  .chat-layout{
+    display:block;
+    height:calc(100vh - 125px);
+    min-height:0;
+  }
+  .chat-list{
+    border:0;
+    height:100%;
+    padding:12px;
+  }
+  .chat-window{
+    display:none;
+    height:100%;
+  }
+  .chat-layout.conversation-open .chat-list{display:none}
+  .chat-layout.conversation-open .chat-window{display:flex}
+  .messages{padding:13px}
+  .message{max-width:88%}
+  .mobile-nav{
+    position:fixed;
+    bottom:0;left:0;right:0;
+    display:flex;
+    height:65px;
+    background:#091f18;
+    border-top:1px solid var(--border);
+    z-index:10;
+    justify-content:space-around;
+  }
+  .mobile-nav button{
+    flex:1;
+    border:0;
+    background:none;
+    color:#a9c7b8;
+    font-size:10px;
+  }
+  .mobile-nav button span{
+    display:block;
+    font-size:20px;
+    margin-bottom:3px;
+  }
+  .mobile-nav button.active{color:var(--green)}
+  .back-btn{
+    border:0;background:none;color:var(--green);
+    font-size:20px;margin-right:5px;
+  }
+  .toolbar{flex-wrap:wrap}
 }
 </style>
 </head>
 
 <body>
 
-<!-- ================= AUTHENTIFICATION ================= -->
+<div id="authScreen">
+  <div class="auth-box">
+    <div class="logo">NOVATALK 🌍</div>
+    <div class="subtitle">CONNECT THE WORLD · BY MARUCE SOLDADO 🇬🇳</div>
 
-<div class="auth-page" id="authPage">
+    <div id="authNotice" class="notice error"></div>
 
-    <div class="auth-card">
-
-        <div class="logo">NOVATALK 🌍</div>
-        <div class="slogan">Connect the World</div>
-
-        <div id="registerBox">
-
-            <h2>Créer un compte</h2>
-
-            <input id="fullName"
-                placeholder="Ton nom complet"
-                autocomplete="name">
-
-            <input id="regUsername"
-                placeholder="Choisis un identifiant"
-                autocomplete="username">
-
-            <input id="regPassword"
-                type="password"
-                placeholder="Créer un mot de passe"
-                autocomplete="new-password">
-
-            <input id="confirmPassword"
-                type="password"
-                placeholder="Confirmer le mot de passe"
-                autocomplete="new-password">
-
-            <button class="btn primary full"
-                id="registerBtn"
-                onclick="register()">
-                Créer mon compte
-            </button>
-
-            <div class="switch">
-                Tu as déjà un compte ?
-                <span onclick="showLogin()">Se connecter</span>
-            </div>
-
-        </div>
-
-        <div id="loginBox" class="hidden">
-
-            <h2>Bienvenue !</h2>
-
-            <input id="loginUsername"
-                placeholder="Ton identifiant"
-                autocomplete="username">
-
-            <input id="loginPassword"
-                type="password"
-                placeholder="Ton mot de passe"
-                autocomplete="current-password">
-
-            <button class="btn primary full"
-                id="loginBtn"
-                onclick="login()">
-                Se connecter
-            </button>
-
-            <div class="switch">
-                Pas encore de compte ?
-                <span onclick="showRegister()">S'inscrire</span>
-            </div>
-
-        </div>
-
-        <div id="authMessage" class="notice hidden"></div>
-
-        <div class="footer">
-            NOVATALK © 2026<br>
-            Créé par MARUCE SOLDADO 🇬🇳
-        </div>
-
+    <div id="loginForm">
+      <h2>Connexion</h2>
+      <div class="field">
+        <label>Nom d'utilisateur</label>
+        <input id="loginUsername" autocomplete="username" placeholder="Ton identifiant">
+      </div>
+      <div class="field">
+        <label>Mot de passe</label>
+        <input id="loginPassword" type="password" autocomplete="current-password" placeholder="Ton mot de passe">
+      </div>
+      <button class="primary" id="loginButton" onclick="login()">Se connecter</button>
+      <div class="switch">
+        Pas encore de compte ?
+        <button onclick="showRegister()">Créer un compte</button>
+      </div>
     </div>
+
+    <div id="registerForm" class="hidden">
+      <h2>Créer un compte</h2>
+      <div class="field">
+        <label>Nom complet</label>
+        <input id="registerName" autocomplete="name" placeholder="Ton nom complet">
+      </div>
+      <div class="field">
+        <label>Nom d'utilisateur</label>
+        <input id="registerUsername" autocomplete="username" placeholder="Exemple : maruce123">
+      </div>
+      <div class="field">
+        <label>Mot de passe</label>
+        <input id="registerPassword" type="password" autocomplete="new-password" placeholder="Créer un mot de passe">
+      </div>
+      <div class="field">
+        <label>Confirmer le mot de passe</label>
+        <input id="registerConfirm" type="password" autocomplete="new-password" placeholder="Confirmer">
+      </div>
+      <button class="primary" id="registerButton" onclick="register()">Créer mon compte</button>
+      <div class="switch">
+        Déjà inscrit ?
+        <button onclick="showLogin()">Se connecter</button>
+      </div>
+    </div>
+  </div>
 </div>
 
+<div id="app" class="hidden">
+  <aside class="sidebar">
+    <div class="brand">NOVATALK 🌍</div>
+    <div class="brand-sub">CONNECT THE WORLD</div>
 
-<!-- ================= APPLICATION ================= -->
+    <div class="profile">
+      <div class="avatar" id="sideAvatar">N</div>
+      <div class="profile-info">
+        <strong id="sideName">Utilisateur</strong>
+        <small id="sideUsername">@utilisateur</small>
+      </div>
+    </div>
 
-<div class="app" id="app">
+    <div class="nav-title">MENU PRINCIPAL</div>
+    <button class="nav-btn active" data-page="chats" onclick="navigate('chats')">💬 Discussions</button>
+    <button class="nav-btn" data-page="friends" onclick="navigate('friends')">🤝 Mes amis</button>
+    <button class="nav-btn" data-page="requests" onclick="navigate('requests')">
+      📩 Invitations <span class="count hidden" id="requestCount">0</span>
+    </button>
+    <button class="nav-btn" data-page="members" onclick="navigate('members')">🌍 Membres</button>
+    <button class="nav-btn logout" onclick="logout()">↪ Déconnexion</button>
+  </aside>
 
-    <aside class="sidebar">
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <h2 id="topTitle">Discussions</h2>
+        <small>NOVATALK · Connect the World</small>
+      </div>
+      <div id="topUser" style="color:var(--green);font-size:12px"></div>
+    </header>
 
-        <div class="sidebar-header">
+    <div id="normalPage" class="content">
+      <div id="pageNotice" class="notice"></div>
+      <div id="pageContent"></div>
+    </div>
 
-            <div class="brand">
-                NOVATALK 🌍
-                <small>CONNECT THE WORLD</small>
-            </div>
-
-            <div class="profile">
-
-                <div class="avatar" id="profileAvatar">N</div>
-
-                <div class="profile-info">
-                    <strong id="profileName">Utilisateur</strong>
-                    <small>
-                        <span class="online-dot"></span>
-                        <span id="profileUsername">@user</span>
-                    </small>
-                </div>
-
-            </div>
+    <div id="chatPage" class="chat-layout hidden">
+      <div class="chat-list">
+        <h3>💬 Discussions</h3>
+        <div id="conversationList"></div>
+      </div>
+      <div class="chat-window">
+        <div class="chat-header">
+          <button class="back-btn" onclick="closeConversation()">‹</button>
+          <div class="avatar" id="chatAvatar">?</div>
+          <div>
+            <strong id="chatName">Conversation</strong>
+            <small id="chatUsername"></small>
+          </div>
         </div>
-
-
-        <div class="search-area">
-
-            <input id="searchInput"
-                placeholder="Rechercher un identifiant..."
-                autocomplete="off">
-
-            <button class="btn primary"
-                onclick="searchUsers()">
-                🔎 Rechercher
-            </button>
-
-            <div id="searchResults"></div>
-
+        <div class="messages" id="messages">
+          <div class="empty">Choisis une discussion pour commencer</div>
         </div>
-
-
-        <div class="section-title">
-            Mes conversations
+        <div id="replyBar" class="reply-bar hidden">
+          <span id="replyText">Réponse</span>
+          <button onclick="cancelReply()">✕</button>
         </div>
-
-        <div class="conversation-list" id="conversationList">
-            <div class="status">Chargement...</div>
+        <div class="composer">
+          <input id="messageInput" placeholder="Écrire un message..." maxlength="5000">
+          <button class="send-btn" onclick="sendMessage()">➤</button>
         </div>
+      </div>
+    </div>
+  </main>
 
-        <div class="sidebar-footer">
-
-            <button class="logout" onclick="logout()">
-                🚪 Déconnexion
-            </button>
-
-        </div>
-
-    </aside>
-
-
-    <main class="main">
-
-        <div class="empty-state" id="welcomeScreen">
-
-            <div class="big-logo">🌍</div>
-
-            <h2>Bienvenue sur NOVATALK</h2>
-
-            <p>
-                Connecte-toi avec le monde entier.
-                Recherche un utilisateur et commence
-                ta première conversation.
-            </p>
-
-        </div>
-
-
-        <div id="chatScreen" class="hidden"
-            style="display:flex;flex-direction:column;flex:1;min-height:0;">
-
-            <header class="chat-header">
-
-                <button class="back-btn" onclick="backToList()">
-                    ←
-                </button>
-
-                <div class="avatar" id="chatAvatar">U</div>
-
-                <div class="chat-header-info">
-                    <strong id="chatName">Utilisateur</strong>
-                    <small id="chatUsername">@user</small>
-                </div>
-
-            </header>
-
-
-            <div class="messages" id="messages">
-
-                <div class="status">
-                    Chargement des messages...
-                </div>
-
-            </div>
-
-
-            <form class="composer" id="messageForm">
-
-                <input id="messageInput"
-                    placeholder="Écrire un message..."
-                    maxlength="4000"
-                    autocomplete="off">
-
-                <button class="send-btn"
-                    id="sendBtn"
-                    type="submit">
-                    ➤
-                </button>
-
-            </form>
-
-        </div>
-
-    </main>
-
+  <nav class="mobile-nav">
+    <button data-page="chats" class="active" onclick="navigate('chats')"><span>💬</span>Chats</button>
+    <button data-page="friends" onclick="navigate('friends')"><span>🤝</span>Amis</button>
+    <button data-page="requests" onclick="navigate('requests')"><span>📩</span>Invitations</button>
+    <button data-page="members" onclick="navigate('members')"><span>🌍</span>Membres</button>
+  </nav>
 </div>
 
+<div id="toast"></div>
 
 <script>
 "use strict";
 
-/* =====================================================
-   CONFIGURATION
-===================================================== */
-
-const API = "https://novatalk-2yui.onrender.com/api";
-
+/* CONFIGURATION */
+const API_BASE = "https://novatalk-2yui.onrender.com/api";
 const TOKEN_KEY = "novatalk_token";
 
-let token = localStorage.getItem(TOKEN_KEY);
-
+let token = localStorage.getItem(TOKEN_KEY) || "";
 let currentUser = null;
+let currentPage = "chats";
 let currentConversation = null;
-let currentPartner = null;
+let currentMessages = [];
+let replyTo = null;
+let conversations = [];
+let friends = [];
+let members = [];
+let incomingRequests = [];
+let refreshChatsTimer = null;
+let refreshMessagesTimer = null;
 
-let conversationTimer = null;
-let messageTimer = null;
+const $ = id => document.getElementById(id);
 
-let lastMessageSignature = "";
-
-
-/* =====================================================
-   OUTILS
-===================================================== */
-
-function escapeText(value) {
-    return String(value ?? "");
+function escapeHTML(value){
+  return String(value ?? "").replace(/[&<>"']/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  })[c]);
 }
 
-function initials(name) {
-    return escapeText(name).trim().charAt(0).toUpperCase() || "N";
+function getInitial(name){
+  return String(name || "?").trim().charAt(0).toUpperCase();
 }
 
-function dateFormat(date) {
-    if (!date) return "";
+function toast(message){
+  const box = $("toast");
+  box.textContent = message;
+  box.style.display = "block";
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(()=>box.style.display="none",3000);
+}
 
-    return new Date(date).toLocaleTimeString("fr-FR", {
-        hour: "2-digit",
-        minute: "2-digit"
+function showNotice(id,message,type="error"){
+  const box=$(id);
+  if(!box)return;
+  box.textContent=message;
+  box.className="notice "+type;
+  box.style.display="block";
+}
+
+function hideNotice(id){
+  const box=$(id);
+  if(box)box.style.display="none";
+}
+
+async function api(path, options={}){
+  const headers={"Content-Type":"application/json",...(options.headers||{})};
+  if(token)headers.Authorization="Bearer "+token;
+
+  let response;
+  try{
+    response=await fetch(API_BASE+path,{
+      ...options,
+      headers
     });
+  }catch(error){
+    throw new Error("Impossible de contacter le serveur. Vérifie ta connexion Internet.");
+  }
+
+  let data={};
+  try{data=await response.json()}catch(e){}
+
+  if(!response.ok || data.success===false){
+    throw new Error(data.message || data.error || "Une erreur est survenue.");
+  }
+  return data;
 }
 
-function showAuthMessage(message, type) {
-    const box = document.getElementById("authMessage");
+/* AUTHENTIFICATION */
 
-    box.textContent = message;
-    box.className = "notice " + type;
+function showLogin(){
+  $("loginForm").classList.remove("hidden");
+  $("registerForm").classList.add("hidden");
+  hideNotice("authNotice");
 }
 
-function clearAuthMessage() {
-    document.getElementById("authMessage").className = "notice hidden";
+function showRegister(){
+  $("loginForm").classList.add("hidden");
+  $("registerForm").classList.remove("hidden");
+  hideNotice("authNotice");
 }
 
-function setButton(id, text, disabled) {
-    const button = document.getElementById(id);
+async function login(){
+  const username=$("loginUsername").value.trim();
+  const password=$("loginPassword").value;
+  if(!username || !password)return showNotice("authNotice","Remplis tous les champs.");
 
-    button.textContent = text;
-    button.disabled = disabled;
+  const button=$("loginButton");
+  button.disabled=true;
+  button.textContent="Connexion...";
+
+  try{
+    const data=await api("/auth/login",{
+      method:"POST",
+      body:JSON.stringify({username,password})
+    });
+    if(!data.token)throw new Error("Le serveur n'a pas renvoyé de jeton de connexion.");
+    token=data.token;
+    localStorage.setItem(TOKEN_KEY,token);
+    await loadProfile();
+    enterApp();
+    toast("Bienvenue sur NOVATALK !");
+  }catch(error){
+    showNotice("authNotice",error.message);
+  }finally{
+    button.disabled=false;
+    button.textContent="Se connecter";
+  }
 }
 
-
-/* =====================================================
-   COMMUNICATION API
-===================================================== */
-
-async function api(path, options = {}) {
-
-    const headers = {
-        "Content-Type": "application/json",
-        ...(options.headers || {})
-    };
-
-    if (token) {
-        headers.Authorization = "Bearer " + token;
-    }
-
-    let response;
-
-    try {
-
-        response = await fetch(API + path, {
-            ...options,
-            headers
-        });
-
-    } catch (error) {
-
-        throw new Error(
-            "Impossible de contacter NOVATALK. Vérifie ta connexion Internet."
-        );
-    }
-
-    const result = await response.json().catch(() => ({}));
-
-    if (!response.ok || result.success === false) {
-
-        if (response.status === 401) {
-            logout();
-        }
-
-        throw new Error(
-            result.message || "Une erreur est survenue."
-        );
-    }
-
-    return result;
-}
-
-
-/* =====================================================
-   AFFICHAGE AUTHENTIFICATION
-===================================================== */
-
-function showLogin() {
-
-    clearAuthMessage();
-
-    document.getElementById("registerBox")
-        .classList.add("hidden");
-
-    document.getElementById("loginBox")
-        .classList.remove("hidden");
-}
-
-function showRegister() {
-
-    clearAuthMessage();
-
-    document.getElementById("loginBox")
-        .classList.add("hidden");
-
-    document.getElementById("registerBox")
-        .classList.remove("hidden");
-}
-
-
-/* =====================================================
-   INSCRIPTION
-===================================================== */
-
-async function register() {
-
-    clearAuthMessage();
-
-    const full_name =
-        document.getElementById("fullName").value.trim();
-
-    const username =
-        document.getElementById("regUsername").value.trim().toLowerCase();
-
-    const password =
-        document.getElementById("regPassword").value;
-
-    const confirmation =
-        document.getElementById("confirmPassword").value;
-
-    if (!full_name || !username || !password || !confirmation) {
-        return showAuthMessage("Remplis tous les champs.", "error");
-    }
-
-    if (password !== confirmation) {
-        return showAuthMessage(
-            "Les mots de passe ne correspondent pas.",
-            "error"
-        );
-    }
-
-    if (password.length < 8) {
-        return showAuthMessage(
-            "Le mot de passe doit contenir au moins 8 caractères.",
-            "error"
-        );
-    }
-
-    setButton("registerBtn", "Création...", true);
-
-    try {
-
-        const result = await api("/auth/register", {
-            method: "POST",
-            body: JSON.stringify({
-                full_name,
-                username,
-                password
-            })
-        });
-
-        if (!result.token) {
-            throw new Error("Token de connexion manquant.");
-        }
-
-        token = result.token;
-
-        localStorage.setItem(TOKEN_KEY, token);
-
-        await openApplication(result.user);
-
-    } catch (error) {
-
-        showAuthMessage(error.message, "error");
-
-    } finally {
-
-        setButton("registerBtn", "Créer mon compte", false);
-    }
-}
-
-
-/* =====================================================
-   CONNEXION
-===================================================== */
-
-async function login() {
-
-    clearAuthMessage();
-
-    const username =
-        document.getElementById("loginUsername").value.trim().toLowerCase();
-
-    const password =
-        document.getElementById("loginPassword").value;
-
-    if (!username || !password) {
-        return showAuthMessage(
-            "Entre ton identifiant et ton mot de passe.",
-            "error"
-        );
-    }
-
-    setButton("loginBtn", "Connexion...", true);
-
-    try {
-
-        const result = await api("/auth/login", {
-            method: "POST",
-            body: JSON.stringify({
-                username,
-                password
-            })
-        });
-
-        if (!result.token) {
-            throw new Error("Token de connexion manquant.");
-        }
-
-        token = result.token;
-
-        localStorage.setItem(TOKEN_KEY, token);
-
-        await openApplication(result.user);
-
-    } catch (error) {
-
-        showAuthMessage(error.message, "error");
-
-    } finally {
-
-        setButton("loginBtn", "Se connecter", false);
-    }
-}
-
-
-/* =====================================================
-   OUVRIR L'APPLICATION
-===================================================== */
-
-async function openApplication(user) {
-
-    currentUser = user;
-
-    document.getElementById("authPage").style.display = "none";
-
-    document.getElementById("app").style.display = "flex";
-
-    document.getElementById("profileName").textContent =
-        user.full_name;
-
-    document.getElementById("profileUsername").textContent =
-        "@" + user.username;
-
-    document.getElementById("profileAvatar").textContent =
-        initials(user.full_name);
-
-    await loadConversations();
-
-    clearInterval(conversationTimer);
-
-    conversationTimer = setInterval(() => {
-        loadConversations();
-    }, 10000);
-}
-
-
-/* =====================================================
-   RECHERCHE UTILISATEURS
-===================================================== */
-
-async function searchUsers() {
-
-    const query = document.getElementById("searchInput")
-        .value.trim().toLowerCase();
-
-    const results = document.getElementById("searchResults");
-
-    results.innerHTML = "";
-
-    if (query.length < 3) {
-
-        results.textContent =
-            "Saisis au moins 3 caractères.";
-
-        results.className = "status";
-
-        return;
-    }
-
-    results.textContent = "Recherche...";
-
-    try {
-
-        const result = await api(
-            "/users/search?q=" + encodeURIComponent(query)
-        );
-
-        results.innerHTML = "";
-
-        if (!result.users || result.users.length === 0) {
-
-            results.textContent = "Aucun utilisateur trouvé.";
-
-            results.className = "status";
-
-            return;
-        }
-
-        result.users.forEach(user => {
-
-            const item = document.createElement("div");
-
-            item.className = "result-user";
-
-            const info = document.createElement("div");
-
-            const name = document.createElement("strong");
-
-            name.textContent = user.full_name;
-
-            const username = document.createElement("small");
-
-            username.textContent = "@" + user.username;
-
-            info.append(name, username);
-
-            const button = document.createElement("button");
-
-            button.textContent = "Discuter";
-
-            button.onclick = () => startConversation(user.username);
-
-            item.append(info, button);
-
-            results.appendChild(item);
-        });
-
-    } catch (error) {
-
-        results.textContent = error.message;
-
-        results.className = "status";
-    }
-}
-
-
-/* =====================================================
-   CRÉER UNE CONVERSATION
-===================================================== */
-
-async function startConversation(username) {
-
-    try {
-
-        const result = await api("/conversations", {
-            method: "POST",
-            body: JSON.stringify({
-                username
-            })
-        });
-
-        const partner = result.user;
-
-        await loadConversations();
-
-        await openConversation(
-            result.conversation_id,
-            partner
-        );
-
-        document.getElementById("searchResults").innerHTML = "";
-
-        document.getElementById("searchInput").value = "";
-
-    } catch (error) {
-
-        alert(error.message);
-    }
-}
-
-
-/* =====================================================
-   CHARGER LES CONVERSATIONS
-===================================================== */
-
-async function loadConversations() {
-
-    try {
-
-        const result = await api("/conversations");
-
-        const list = document.getElementById("conversationList");
-
-        const conversations = result.conversations || [];
-
-        list.innerHTML = "";
-
-        if (conversations.length === 0) {
-
-            const empty = document.createElement("div");
-
-            empty.className = "status";
-
-            empty.textContent =
-                "Aucune conversation. Recherche un utilisateur pour commencer.";
-
-            list.appendChild(empty);
-
-            return;
-        }
-
-        conversations.forEach(conversation => {
-
-            const user = conversation.user;
-
-            const item = document.createElement("div");
-
-            item.className = "conversation";
-
-            if (
-                currentConversation === conversation.conversation_id
-            ) {
-                item.classList.add("active");
-            }
-
-            const avatar = document.createElement("div");
-
-            avatar.className = "avatar";
-
-            avatar.textContent = initials(user.full_name);
-
-            const info = document.createElement("div");
-
-            info.className = "conversation-info";
-
-            const name = document.createElement("strong");
-
-            name.textContent = user.full_name;
-
-            const last = document.createElement("small");
-
-            last.textContent = conversation.last_message
-                ? conversation.last_message.content
-                : "Nouvelle conversation";
-
-            info.append(name, last);
-
-            item.append(avatar, info);
-
-            item.onclick = () => {
-                openConversation(
-                    conversation.conversation_id,
-                    user
-                );
-            };
-
-            list.appendChild(item);
-        });
-
-    } catch (error) {
-
-        console.error("CONVERSATIONS:", error.message);
-    }
-}
-
-
-/* =====================================================
-   OUVRIR UNE DISCUSSION
-===================================================== */
-
-async function openConversation(id, partner) {
-
-    currentConversation = id;
-    currentPartner = partner;
-
-    lastMessageSignature = "";
-
-    document.getElementById("welcomeScreen")
-        .classList.add("hidden");
-
-    document.getElementById("chatScreen")
-        .classList.remove("hidden");
-
-    document.getElementById("chatName").textContent =
-        partner.full_name;
-
-    document.getElementById("chatUsername").textContent =
-        "@" + partner.username;
-
-    document.getElementById("chatAvatar").textContent =
-        initials(partner.full_name);
-
-    document.getElementById("app").classList.add("chat-open");
-
-    await loadMessages();
-
-    clearInterval(messageTimer);
-
-    messageTimer = setInterval(() => {
-
-        if (currentConversation === id) {
-            loadMessages();
-        }
-
-    }, 4000);
-
-    loadConversations();
-}
-
-
-/* =====================================================
-   CHARGER LES MESSAGES
-===================================================== */
-
-async function loadMessages() {
-
-    if (!currentConversation) return;
-
-    const id = currentConversation;
-
-    try {
-
-        const result = await api(
-            "/conversations/" + encodeURIComponent(id) + "/messages"
-        );
-
-        if (currentConversation !== id) return;
-
-        const messages = result.messages || [];
-
-        const signature = messages.map(message =>
-            message.id + ":" + message.is_read
-        ).join("|");
-
-        if (signature === lastMessageSignature) return;
-
-        lastMessageSignature = signature;
-
-        const box = document.getElementById("messages");
-
-        box.innerHTML = "";
-
-        if (messages.length === 0) {
-
-            const empty = document.createElement("div");
-
-            empty.className = "status";
-
-            empty.textContent =
-                "C'est le début de votre conversation. Envoyez votre premier message !";
-
-            box.appendChild(empty);
-
-            return;
-        }
-
-        messages.forEach(message => {
-
-            const row = document.createElement("div");
-
-            const mine = message.sender_id === currentUser.id;
-
-            row.className = "message-row" + (mine ? " mine" : "");
-
-            const bubble = document.createElement("div");
-
-            bubble.className = "bubble";
-
-            bubble.textContent = message.content;
-
-            const time = document.createElement("div");
-
-            time.className = "message-time";
-
-            time.textContent = dateFormat(message.created_at);
-
-            row.append(bubble, time);
-
-            box.appendChild(row);
-        });
-
-        box.scrollTop = box.scrollHeight;
-
-    } catch (error) {
-
-        console.error("MESSAGES:", error.message);
-    }
-}
-
-
-/* =====================================================
-   ENVOYER UN MESSAGE
-===================================================== */
-
-document.getElementById("messageForm")
-    .addEventListener("submit", async event => {
-
-        event.preventDefault();
-
-        if (!currentConversation) return;
-
-        const input = document.getElementById("messageInput");
-
-        const content = input.value.trim();
-
-        if (!content) return;
-
-        const id = currentConversation;
-
-        const button = document.getElementById("sendBtn");
-
-        button.disabled = true;
-
-        try {
-
-            await api(
-                "/conversations/" + encodeURIComponent(id) + "/messages",
-                {
-                    method: "POST",
-                    body: JSON.stringify({
-                        content
-                    })
-                }
-            );
-
-            input.value = "";
-
-            lastMessageSignature = "";
-
-            await loadMessages();
-
-            await loadConversations();
-
-            input.focus();
-
-        } catch (error) {
-
-            alert(error.message);
-
-        } finally {
-
-            button.disabled = false;
-        }
+async function register(){
+  const full_name=$("registerName").value.trim();
+  const username=$("registerUsername").value.trim();
+  const password=$("registerPassword").value;
+  const confirm=$("registerConfirm").value;
+
+  if(!full_name || !username || !password || !confirm)
+    return showNotice("authNotice","Remplis tous les champs.");
+
+  if(password.length<6)
+    return showNotice("authNotice","Le mot de passe doit contenir au moins 6 caractères.");
+
+  if(password!==confirm)
+    return showNotice("authNotice","Les mots de passe ne correspondent pas.");
+
+  const button=$("registerButton");
+  button.disabled=true;
+  button.textContent="Création du compte...";
+
+  try{
+    const data=await api("/auth/register",{
+      method:"POST",
+      body:JSON.stringify({full_name,username,password})
     });
 
-
-/* =====================================================
-   RETOUR AUX CONVERSATIONS
-===================================================== */
-
-function backToList() {
-
-    document.getElementById("app")
-        .classList.remove("chat-open");
-
-    clearInterval(messageTimer);
-
-    currentConversation = null;
-
-    currentPartner = null;
-
-    loadConversations();
+    if(data.token){
+      token=data.token;
+      localStorage.setItem(TOKEN_KEY,token);
+      await loadProfile();
+      enterApp();
+      toast("Ton compte NOVATALK est créé !");
+    }else{
+      showLogin();
+      $("loginUsername").value=username;
+      showNotice("authNotice","Compte créé. Connecte-toi avec ton identifiant et ton mot de passe.","success");
+    }
+  }catch(error){
+    showNotice("authNotice",error.message);
+  }finally{
+    button.disabled=false;
+    button.textContent="Créer mon compte";
+  }
 }
 
+async function loadProfile(){
+  const data=await api("/auth/me");
+  currentUser=data.user || data.profile || data;
+}
 
-/* =====================================================
-   DÉCONNEXION
-===================================================== */
+function enterApp(){
+  $("authScreen").classList.add("hidden");
+  $("app").classList.remove("hidden");
 
-function logout() {
+  const name=currentUser.full_name || currentUser.name || currentUser.username || "Utilisateur";
+  const username=currentUser.username || "";
 
-    clearInterval(conversationTimer);
+  $("sideName").textContent=name;
+  $("sideUsername").textContent="@"+username;
+  $("sideAvatar").textContent=getInitial(name);
+  $("topUser").textContent="@"+username;
 
-    clearInterval(messageTimer);
+  navigate("chats");
+  loadAllData();
 
+  clearInterval(refreshChatsTimer);
+  clearInterval(refreshMessagesTimer);
+
+  refreshChatsTimer=setInterval(()=>{
+    if(currentPage==="chats")loadConversations();
+    loadRequests();
+  },10000);
+
+  refreshMessagesTimer=setInterval(()=>{
+    if(currentPage==="chats" && currentConversation)loadMessages(true);
+  },4000);
+}
+
+async function restoreSession(){
+  if(!token)return;
+  try{
+    await loadProfile();
+    enterApp();
+  }catch(error){
+    token="";
     localStorage.removeItem(TOKEN_KEY);
-
-    token = null;
-
-    currentUser = null;
-
-    currentConversation = null;
-
-    currentPartner = null;
-
-    document.getElementById("app").style.display = "none";
-
-    document.getElementById("authPage").style.display = "flex";
-
-    document.getElementById("app").classList.remove("chat-open");
-
-    showLogin();
+  }
 }
 
+function logout(){
+  token="";
+  currentUser=null;
+  currentConversation=null;
+  localStorage.removeItem(TOKEN_KEY);
+  clearInterval(refreshChatsTimer);
+  clearInterval(refreshMessagesTimer);
+  $("app").classList.add("hidden");
+  $("authScreen").classList.remove("hidden");
+  showLogin();
+  toast("Déconnexion effectuée.");
+}
 
-/* =====================================================
-   RESTAURER LA SESSION
-===================================================== */
+/* NAVIGATION */
 
-async function restoreSession() {
+function navigate(page){
+  currentPage=page;
+  currentConversation=null;
+  replyTo=null;
 
-    if (!token) return;
+  $("chatPage").classList.add("hidden");
+  $("normalPage").classList.remove("hidden");
+  $("chatPage").classList.remove("conversation-open");
 
-    try {
+  document.querySelectorAll(".nav-btn,.mobile-nav button").forEach(button=>{
+    button.classList.toggle("active",button.dataset.page===page);
+  });
 
-        const result = await api("/auth/me");
+  const titles={
+    chats:"Discussions",
+    friends:"Mes amis",
+    requests:"Invitations",
+    members:"Membres"
+  };
+  $("topTitle").textContent=titles[page] || "NOVATALK";
 
-        await openApplication(result.user);
+  if(page==="chats"){
+    $("normalPage").classList.add("hidden");
+    $("chatPage").classList.remove("hidden");
+    loadConversations();
+  }
+  if(page==="friends")renderFriends();
+  if(page==="requests")renderRequests();
+  if(page==="members")renderMembers();
+}
 
-    } catch (error) {
+/* CHARGEMENT DES DONNÉES */
 
-        localStorage.removeItem(TOKEN_KEY);
+async function loadAllData(){
+  await Promise.allSettled([
+    loadFriends(),
+    loadRequests(),
+    loadMembers(),
+    loadConversations()
+  ]);
+}
 
-        token = null;
+async function loadFriends(){
+  try{
+    const data=await api("/friends");
+    friends=data.friends || data.users || [];
+    if(currentPage==="friends")renderFriends();
+  }catch(error){
+    console.error("Amis:",error);
+  }
+}
+
+async function loadRequests(){
+  try{
+    const data=await api("/friend-requests");
+    incomingRequests=data.requests || data.friend_requests || [];
+    updateRequestCount();
+    if(currentPage==="requests")renderRequests();
+  }catch(error){
+    console.error("Invitations:",error);
+  }
+}
+
+async function loadMembers(){
+  try{
+    const data=await api("/users");
+    members=data.users || data.members || [];
+    if(currentPage==="members")renderMembers();
+  }catch(error){
+    console.error("Membres:",error);
+  }
+}
+
+async function loadConversations(){
+  try{
+    const data=await api("/conversations");
+    conversations=data.conversations || [];
+    renderConversations();
+  }catch(error){
+    console.error("Discussions:",error);
+  }
+}
+
+/* OUTILS UTILISATEURS */
+
+function userId(user){
+  return user.id || user.user_id || "";
+}
+function userName(user){
+  return user.full_name || user.name || user.username || "Utilisateur";
+}
+function userUsername(user){
+  return user.username || "";
+}
+function findConversationUser(conversation){
+  return conversation.other_user ||
+    conversation.friend ||
+    conversation.recipient ||
+    conversation.user ||
+    conversation.partner ||
+    {};
+}
+
+function updateRequestCount(){
+  const count=incomingRequests.length;
+  const badge=$("requestCount");
+  badge.textContent=count;
+  badge.classList.toggle("hidden",count===0);
+  document.querySelectorAll('.mobile-nav button[data-page="requests"]').forEach(btn=>{
+    btn.title=count+" invitation(s)";
+  });
+}
+
+/* MEMBRES */
+
+function renderMembers(){
+  $("pageContent").innerHTML=`
+    <h1 class="page-title">🌍 Membres NOVATALK</h1>
+    <p class="page-desc">Découvre les personnes inscrites sur NOVATALK et envoie-leur une invitation.</p>
+    <div class="toolbar">
+      <input id="memberSearch" placeholder="Rechercher un membre..." oninput="filterMembers()">
+    </div>
+    <div id="memberResults"></div>
+  `;
+  filterMembers();
+}
+
+function filterMembers(){
+  const input=$("memberSearch");
+  if(!input)return;
+  const q=input.value.toLowerCase();
+
+  const filtered=members.filter(user=>{
+    if(userId(user)===userId(currentUser))return false;
+    const name=userName(user).toLowerCase();
+    const username=userUsername(user).toLowerCase();
+    return name.includes(q)||username.includes(q);
+  });
+
+  const container=$("memberResults");
+  if(!filtered.length){
+    container.innerHTML='<div class="empty"><div class="icon">🌍</div>Aucun membre trouvé.</div>';
+    return;
+  }
+
+  container.innerHTML=filtered.map(user=>{
+    const id=userId(user);
+    const username=userUsername(user);
+    const isFriend=friends.some(f=>userId(f)===id);
+    const alreadySent=user.request_sent===true || user.friend_request_sent===true;
+
+    let action="";
+    if(isFriend){
+      action='<button class="action secondary" disabled>Déjà ami</button>';
+    }else if(alreadySent){
+      action='<button class="action secondary" disabled>Invitation envoyée</button>';
+    }else{
+      action=`<button class="action" onclick="sendInvitation('${escapeHTML(username)}')">Ajouter</button>`;
     }
+
+    return `
+      <div class="card user-row">
+        <div class="avatar">${escapeHTML(getInitial(userName(user)))}</div>
+        <div class="user-details">
+          <strong>${escapeHTML(userName(user))}</strong>
+          <small>@${escapeHTML(username)}</small>
+        </div>
+        ${action}
+      </div>
+    `;
+  }).join("");
 }
 
+/* INVITATIONS */
 
-/* =====================================================
-   INITIALISATION
-===================================================== */
-
-document.getElementById("searchInput")
-    .addEventListener("keydown", event => {
-
-        if (event.key === "Enter") {
-            searchUsers();
-        }
+async function sendInvitation(username){
+  if(!username)return toast("Identifiant du membre indisponible.");
+  try{
+    await api("/friend-requests",{
+      method:"POST",
+      body:JSON.stringify({username})
     });
+    toast("Invitation envoyée !");
+    await loadMembers();
+    renderMembers();
+  }catch(error){
+    toast(error.message);
+  }
+}
+
+function renderRequests(){
+  $("pageContent").innerHTML=`
+    <h1 class="page-title">📩 Invitations reçues</h1>
+    <p class="page-desc">Accepte ou refuse les demandes d'amitié.</p>
+    <div id="requestResults"></div>
+  `;
+
+  const container=$("requestResults");
+  if(!incomingRequests.length){
+    container.innerHTML='<div class="empty"><div class="icon">📭</div>Aucune invitation pour le moment.</div>';
+    return;
+  }
+
+  container.innerHTML=incomingRequests.map(request=>{
+    const sender=request.sender || request.from_user || request.user || {};
+    const name=userName(sender);
+    const username=userUsername(sender);
+
+    return `
+      <div class="card user-row">
+        <div class="avatar">${escapeHTML(getInitial(name))}</div>
+        <div class="user-details">
+          <strong>${escapeHTML(name)}</strong>
+          <small>@${escapeHTML(username)} souhaite devenir ton ami</small>
+        </div>
+        <button class="action" onclick="respondRequest('${escapeHTML(request.id)}','accept')">Accepter</button>
+        <button class="action danger" onclick="respondRequest('${escapeHTML(request.id)}','reject')">Refuser</button>
+      </div>
+    `;
+  }).join("");
+}
+
+async function respondRequest(id,action){
+  try{
+    await api("/friend-requests/"+encodeURIComponent(id)+"/respond",{
+      method:"POST",
+      body:JSON.stringify({action})
+    });
+    toast(action==="accept"?"Invitation acceptée !":"Invitation refusée.");
+    await Promise.all([loadRequests(),loadFriends(),loadMembers()]);
+    renderRequests();
+  }catch(error){
+    toast(error.message);
+  }
+}
+
+/* AMIS */
+
+function renderFriends(){
+  $("pageContent").innerHTML=`
+    <h1 class="page-title">🤝 Mes amis</h1>
+    <p class="page-desc">Retrouve tes amis et démarre une discussion.</p>
+    <div id="friendResults"></div>
+  `;
+
+  const container=$("friendResults");
+  if(!friends.length){
+    container.innerHTML=`
+      <div class="empty">
+        <div class="icon">🤝</div>
+        Tu n'as pas encore d'amis.<br>
+        Découvre les membres et envoie une invitation.
+      </div>`;
+    return;
+  }
+
+  container.innerHTML=friends.map(friend=>`
+    <div class="card user-row">
+      <div class="avatar">${escapeHTML(getInitial(userName(friend)))}</div>
+      <div class="user-details">
+        <strong>${escapeHTML(userName(friend))}</strong>
+        <small>@${escapeHTML(userUsername(friend))}</small>
+      </div>
+      <button class="action" onclick="startConversation('${escapeHTML(userUsername(friend))}')">Message</button>
+    </div>
+  `).join("");
+}
+
+/* CONVERSATIONS */
+
+function conversationTitle(conversation){
+  const other=findConversationUser(conversation);
+  return userName(other);
+}
+
+function renderConversations(){
+  const container=$("conversationList");
+  if(!container)return;
+
+  if(!conversations.length){
+    container.innerHTML=`
+      <div class="empty">
+        <div class="icon">💬</div>
+        Aucune discussion.<br>
+        Ajoute un membre pour commencer.
+      </div>`;
+    return;
+  }
+
+  container.innerHTML=conversations.map(conversation=>{
+    const other=findConversationUser(conversation);
+    const title=conversationTitle(conversation);
+    const last=conversation.last_message || conversation.latest_message || {};
+    const preview=last.content || conversation.last_message_content || "Commencez à discuter";
+    const unread=Number(conversation.unread_count || 0);
+    const date=last.created_at || conversation.updated_at || last.updated_at;
+    const selected=currentConversation && currentConversation.id===conversation.id;
+
+    return `
+      <div class="chat-row ${selected?'selected':''}" onclick="openConversation('${escapeHTML(conversation.id)}')">
+        <div class="avatar">${escapeHTML(getInitial(title))}</div>
+        <div class="chat-preview">
+          <strong>${escapeHTML(title)}</strong>
+          <small>${escapeHTML(preview)}</small>
+        </div>
+        <div class="chat-meta">
+          ${date?formatTime(date):""}
+          ${unread?`<br><span class="badge">${unread}</span>`:""}
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+async function startConversation(username){
+  if(!username)return toast("Identifiant de cet ami indisponible.");
+  try{
+    const data=await api("/conversations",{
+      method:"POST",
+      body:JSON.stringify({username})
+    });
+    const conversation=data.conversation || data;
+    if(!conversation.id)throw new Error("La conversation n'a pas pu être ouverte.");
+    await loadConversations();
+    navigate("chats");
+    await openConversation(conversation.id);
+  }catch(error){
+    toast(error.message);
+  }
+}
+
+async function openConversation(id){
+  const conversation=conversations.find(c=>String(c.id)===String(id));
+  if(!conversation)return;
+
+  currentConversation=conversation;
+  replyTo=null;
+  $("replyBar").classList.add("hidden");
+
+  const other=findConversationUser(conversation);
+  $("chatName").textContent=conversationTitle(conversation);
+  $("chatUsername").textContent=other.username?"@"+other.username:"";
+  $("chatAvatar").textContent=getInitial(conversationTitle(conversation));
+
+  $("chatPage").classList.add("conversation-open");
+  renderConversations();
+  await loadMessages(false);
+  $("messageInput").focus();
+}
+
+/* MESSAGES */
+
+function formatTime(value){
+  if(!value)return "";
+  const date=new Date(value);
+  if(Number.isNaN(date.getTime()))return "";
+  return date.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
+}
+
+function formatDate(value){
+  if(!value)return "";
+  const date=new Date(value);
+  if(Number.isNaN(date.getTime()))return "";
+  return date.toLocaleDateString("fr-FR");
+}
+
+async function loadMessages(silent=false){
+  if(!currentConversation)return;
+
+  try{
+    const data=await api("/conversations/"+encodeURIComponent(currentConversation.id)+"/messages");
+    const messages=data.messages || [];
+
+    const oldLast=currentMessages.length
+      ? currentMessages[currentMessages.length-1].id
+      : null;
+
+    currentMessages=messages;
+    renderMessages();
+
+    const newLast=messages.length?messages[messages.length-1].id:null;
+    if(!silent || oldLast!==newLast){
+      $("messages").scrollTop=$("messages").scrollHeight;
+    }
+
+    if(!silent)await loadConversations();
+  }catch(error){
+    if(!silent)toast(error.message);
+  }
+}
+
+function renderMessages(){
+  const container=$("messages");
+
+  if(!currentMessages.length){
+    container.innerHTML='<div class="empty">Aucun message. Envoie le premier message !</div>';
+    return;
+  }
+
+  container.innerHTML=currentMessages.map(message=>{
+    const mine=String(message.sender_id)===String(userId(currentUser));
+    const reply=message.reply_to;
+    let replyHTML="";
+
+    if(reply){
+      const replied=currentMessages.find(m=>String(m.id)===String(reply));
+      if(replied){
+        replyHTML=`<div class="reply-preview">${escapeHTML(String(replied.content||"").slice(0,120))}</div>`;
+      }
+    }
+
+    const deleted=Boolean(message.deleted_at);
+    const body=deleted?"Ce message a été supprimé.":message.content;
+    const time=formatTime(message.created_at);
+    const edited=message.edited_at?" · modifié":"";
+    const read=mine?(message.is_read?" ✓✓":" ✓"):"";
+
+    return `
+      <div class="message ${mine?'mine':''}">
+        ${replyHTML}
+        <div class="body">${escapeHTML(body)}</div>
+        <span class="time">${escapeHTML(time)}${edited}${read}</span>
+        ${!deleted?`
+          <div class="message-actions">
+            <button onclick="replyMessage('${escapeHTML(message.id)}')">Répondre</button>
+            ${mine?`
+              <button onclick="editMessage('${escapeHTML(message.id)}')">Modifier</button>
+              <button onclick="deleteMessage('${escapeHTML(message.id)}')">Supprimer</button>
+            `:""}
+          </div>
+        `:""}
+      </div>
+    `;
+  }).join("");
+}
+
+async function sendMessage(){
+  if(!currentConversation)return toast("Choisis une discussion.");
+
+  const input=$("messageInput");
+  const content=input.value.trim();
+  if(!content)return;
+
+  const payload={content};
+  if(replyTo)payload.reply_to=replyTo;
+
+  input.disabled=true;
+  try{
+    await api("/conversations/"+encodeURIComponent(currentConversation.id)+"/messages",{
+      method:"POST",
+      body:JSON.stringify(payload)
+    });
+
+    input.value="";
+    cancelReply();
+    await loadMessages(false);
+    await loadConversations();
+  }catch(error){
+    toast(error.message);
+  }finally{
+    input.disabled=false;
+    input.focus();
+  }
+}
+
+function replyMessage(id){
+  const message=currentMessages.find(m=>String(m.id)===String(id));
+  if(!message)return;
+  replyTo=id;
+  $("replyText").textContent="Réponse à : "+String(message.content||"").slice(0,100);
+  $("replyBar").classList.remove("hidden");
+  $("messageInput").focus();
+}
+
+function cancelReply(){
+  replyTo=null;
+  $("replyBar").classList.add("hidden");
+}
+
+async function editMessage(id){
+  const message=currentMessages.find(m=>String(m.id)===String(id));
+  if(!message)return;
+
+  const content=prompt("Modifier ton message :",message.content||"");
+  if(content===null)return;
+  if(!content.trim())return toast("Le message ne peut pas être vide.");
+
+  try{
+    await api("/messages/"+encodeURIComponent(id),{
+      method:"PATCH",
+      body:JSON.stringify({content:content.trim()})
+    });
+    toast("Message modifié.");
+    await loadMessages(false);
+  }catch(error){
+    toast(error.message);
+  }
+}
+
+async function deleteMessage(id){
+  if(!confirm("Veux-tu vraiment supprimer ce message ?"))return;
+
+  try{
+    await api("/messages/"+encodeURIComponent(id),{
+      method:"DELETE"
+    });
+    toast("Message supprimé.");
+    await loadMessages(false);
+    await loadConversations();
+  }catch(error){
+    toast(error.message);
+  }
+}
+
+function closeConversation(){
+  currentConversation=null;
+  replyTo=null;
+  $("chatPage").classList.remove("conversation-open");
+  renderConversations();
+}
+
+$("messageInput").addEventListener("keydown",event=>{
+  if(event.key==="Enter" && !event.shiftKey){
+    event.preventDefault();
+    sendMessage();
+  }
+});
+
+/* DÉMARRAGE */
 
 restoreSession();
-
 </script>
-
 </body>
 </html>
