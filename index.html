@@ -18,16 +18,33 @@
   --border:rgba(255,255,255,.09);
   --danger:#ff5364;
 }
-*{box-sizing:border-box;margin:0;padding:0}
+
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+}
+
 body{
   font-family:Arial,sans-serif;
   background:var(--bg);
   color:var(--text);
   min-height:100vh;
 }
-button,input{font:inherit}
-button{cursor:pointer}
-.hidden{display:none!important}
+
+button,input,textarea{
+  font:inherit;
+}
+
+button{
+  cursor:pointer;
+}
+
+.hidden{
+  display:none!important;
+}
+
+/* AUTHENTIFICATION */
 
 #authScreen{
   min-height:100vh;
@@ -35,8 +52,9 @@ button{cursor:pointer}
   align-items:center;
   justify-content:center;
   padding:20px;
-  background:radial-gradient(circle at top,#123d2d,var(--bg) 65%);
+  background:radial-gradient(circle at top,#164b36,var(--bg) 65%);
 }
+
 .auth-box{
   width:100%;
   max-width:420px;
@@ -46,27 +64,37 @@ button{cursor:pointer}
   padding:28px;
   box-shadow:0 20px 70px #0005;
 }
+
 .logo{
   text-align:center;
   font-size:34px;
   font-weight:900;
   color:var(--green);
-  letter-spacing:1px;
 }
+
 .subtitle{
   text-align:center;
   color:var(--muted);
   margin:8px 0 25px;
-  font-size:13px;
+  font-size:12px;
 }
-.auth-box h2{margin-bottom:18px;text-align:center}
-.field{margin-bottom:13px}
+
+.auth-box h2{
+  margin-bottom:18px;
+  text-align:center;
+}
+
+.field{
+  margin-bottom:13px;
+}
+
 .field label{
   display:block;
   font-size:13px;
   color:var(--muted);
   margin-bottom:7px;
 }
+
 .field input{
   width:100%;
   padding:14px;
@@ -76,7 +104,11 @@ button{cursor:pointer}
   color:white;
   outline:none;
 }
-.field input:focus{border-color:var(--green)}
+
+.field input:focus{
+  border-color:var(--green);
+}
+
 .primary{
   width:100%;
   border:0;
@@ -87,13 +119,14 @@ button{cursor:pointer}
   font-weight:800;
   margin-top:8px;
 }
-.primary:disabled{opacity:.5;cursor:wait}
+
 .switch{
   text-align:center;
   color:var(--muted);
   font-size:13px;
   margin-top:18px;
 }
+
 .switch button{
   border:0;
   background:none;
@@ -101,31 +134,42 @@ button{cursor:pointer}
   font-weight:bold;
 }
 
+/* APPLICATION */
+
 #app{
   min-height:100vh;
   display:grid;
-  grid-template-columns:260px 1fr;
+  grid-template-columns:245px minmax(0,1fr) 290px;
 }
+
+/* SIDEBAR */
+
 .sidebar{
   background:#091f18;
   border-right:1px solid var(--border);
-  padding:20px 14px;
+  padding:20px 13px;
   display:flex;
   flex-direction:column;
   min-height:100vh;
+  position:sticky;
+  top:0;
+  height:100vh;
 }
+
 .brand{
-  font-size:23px;
+  font-size:24px;
   font-weight:900;
   color:var(--green);
-  padding:10px 12px 4px;
+  padding:10px;
 }
+
 .brand-sub{
   color:var(--muted);
   font-size:10px;
   letter-spacing:2px;
-  padding:0 12px 25px;
+  padding:0 10px 25px;
 }
+
 .profile{
   display:flex;
   align-items:center;
@@ -135,8 +179,10 @@ button{cursor:pointer}
   border-radius:13px;
   margin-bottom:20px;
 }
+
 .avatar{
-  width:42px;height:42px;
+  width:43px;
+  height:43px;
   border-radius:50%;
   display:flex;
   align-items:center;
@@ -146,20 +192,29 @@ button{cursor:pointer}
   color:#052016;
   font-weight:900;
 }
-.profile-info{min-width:0}
+
+.profile-info{
+  min-width:0;
+}
+
 .profile-info strong{
   display:block;
   overflow:hidden;
   text-overflow:ellipsis;
   white-space:nowrap;
 }
-.profile-info small{color:var(--muted)}
+
+.profile-info small{
+  color:var(--muted);
+}
+
 .nav-title{
   font-size:10px;
   color:#739789;
   padding:12px;
   letter-spacing:1.5px;
 }
+
 .nav-btn{
   display:flex;
   align-items:center;
@@ -170,13 +225,17 @@ button{cursor:pointer}
   background:transparent;
   color:#c4ddd1;
   border:0;
-  border-radius:10px;
+  border-radius:11px;
   text-align:left;
+  transition:.2s;
 }
-.nav-btn:hover,.nav-btn.active{
+
+.nav-btn:hover,
+.nav-btn.active{
   background:#12382b;
   color:var(--green);
 }
+
 .nav-btn .count{
   margin-left:auto;
   background:var(--green);
@@ -184,41 +243,75 @@ button{cursor:pointer}
   font-size:11px;
   font-weight:bold;
   border-radius:20px;
-  min-width:20px;
-  padding:3px 6px;
-  text-align:center;
+  padding:3px 7px;
 }
+
 .logout{
   margin-top:auto;
   color:#ff8790;
 }
-.main{min-width:0}
+
+/* ZONE CENTRALE */
+
+.main{
+  min-width:0;
+  min-height:100vh;
+}
+
 .topbar{
-  height:70px;
+  height:68px;
   display:flex;
   align-items:center;
   justify-content:space-between;
-  padding:0 25px;
+  padding:0 22px;
   border-bottom:1px solid var(--border);
   background:#091f18;
   position:sticky;
   top:0;
   z-index:5;
 }
-.topbar h2{font-size:19px}
-.topbar small{color:var(--muted)}
+
+.topbar h2{
+  font-size:19px;
+}
+
+.topbar small{
+  color:var(--muted);
+}
+
 .content{
-  padding:25px;
-  max-width:1100px;
+  padding:22px;
+  max-width:850px;
   margin:auto;
 }
-.page-title{font-size:25px;margin-bottom:7px}
-.page-desc{color:var(--muted);font-size:13px;margin-bottom:22px}
+
+.page-title{
+  font-size:25px;
+  margin-bottom:7px;
+}
+
+.page-desc{
+  color:var(--muted);
+  font-size:13px;
+  margin-bottom:20px;
+}
+
+/* CARTES */
+
+.card{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:15px;
+  padding:15px;
+  margin-bottom:13px;
+}
+
 .toolbar{
   display:flex;
   gap:10px;
   margin-bottom:18px;
 }
+
 .toolbar input{
   flex:1;
   min-width:0;
@@ -229,31 +322,7 @@ button{cursor:pointer}
   padding:13px;
   outline:none;
 }
-.card{
-  background:var(--panel);
-  border:1px solid var(--border);
-  border-radius:15px;
-  padding:15px;
-  margin-bottom:11px;
-}
-.user-row,.chat-row{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  min-width:0;
-}
-.user-details{flex:1;min-width:0}
-.user-details strong{
-  display:block;
-  margin-bottom:5px;
-}
-.user-details small{
-  display:block;
-  color:var(--muted);
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-}
+
 .action{
   border:0;
   border-radius:9px;
@@ -263,46 +332,284 @@ button{cursor:pointer}
   background:var(--green);
   color:#052016;
 }
+
 .action.secondary{
   background:#214438;
   color:#dfffee;
 }
+
 .action.danger{
   background:#51242c;
   color:#ffb4bb;
 }
-.empty{
+
+/* FIL D'ACTUALITÉ */
+
+.feed{
+  max-width:650px;
+  margin:auto;
+}
+
+.story-section{
+  display:flex;
+  gap:13px;
+  overflow-x:auto;
+  padding:15px;
+  margin-bottom:17px;
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:15px;
+}
+
+.story{
+  min-width:65px;
   text-align:center;
-  padding:50px 15px;
+  cursor:pointer;
+}
+
+.story-circle{
+  width:58px;
+  height:58px;
+  border-radius:50%;
+  padding:3px;
+  margin:auto auto 7px;
+  background:linear-gradient(135deg,#00d68f,#4488ff);
+}
+
+.story-circle div{
+  width:100%;
+  height:100%;
+  border-radius:50%;
+  background:#164332;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:bold;
+}
+
+.story small{
+  font-size:10px;
   color:var(--muted);
 }
-.empty .icon{font-size:35px;margin-bottom:12px}
+
+.create-post{
+  background:var(--panel);
+  border:1px solid var(--border);
+  padding:16px;
+  border-radius:15px;
+  margin-bottom:17px;
+}
+
+.create-post-top{
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+
+.create-post textarea{
+  flex:1;
+  min-width:0;
+  resize:none;
+  background:#102f26;
+  color:white;
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:13px;
+  outline:none;
+  min-height:45px;
+}
+
+.create-post-actions{
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  margin-top:13px;
+  padding-top:12px;
+  border-top:1px solid var(--border);
+}
+
+.post-action{
+  border:0;
+  background:none;
+  color:var(--muted);
+  padding:8px;
+  font-size:12px;
+}
+
+.post-action:hover{
+  color:var(--green);
+}
+
+.post{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:15px;
+  margin-bottom:16px;
+  overflow:hidden;
+}
+
+.post-header{
+  display:flex;
+  align-items:center;
+  gap:11px;
+  padding:15px;
+}
+
+.post-user{
+  flex:1;
+}
+
+.post-user strong{
+  display:block;
+  font-size:14px;
+}
+
+.post-user small{
+  color:var(--muted);
+  font-size:11px;
+}
+
+.post-text{
+  padding:0 15px 15px;
+  line-height:1.6;
+  font-size:14px;
+  overflow-wrap:anywhere;
+}
+
+.post-media{
+  width:100%;
+  max-height:500px;
+  object-fit:cover;
+  display:block;
+}
+
+.post-stats{
+  display:flex;
+  justify-content:space-between;
+  padding:12px 15px;
+  color:var(--muted);
+  font-size:12px;
+}
+
+.post-buttons{
+  display:flex;
+  border-top:1px solid var(--border);
+  padding:5px;
+}
+
+.post-buttons button{
+  flex:1;
+  padding:11px 4px;
+  background:none;
+  border:0;
+  color:var(--muted);
+  font-size:12px;
+}
+
+.post-buttons button:hover{
+  color:var(--green);
+}
+
+/* COLONNE DROITE */
+
+.rightbar{
+  border-left:1px solid var(--border);
+  background:#091f18;
+  padding:20px 14px;
+  min-height:100vh;
+}
+
+.right-card{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:15px;
+  margin-bottom:15px;
+}
+
+.right-card h3{
+  font-size:14px;
+  margin-bottom:13px;
+}
+
+.right-card p{
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.6;
+}
+
+/* NOTIFICATIONS */
+
+.notice{
+  padding:12px;
+  border-radius:10px;
+  margin-bottom:15px;
+  font-size:13px;
+  display:none;
+}
+
+.notice.error{
+  background:#51242c;
+  color:#ffd6da;
+}
+
+.notice.success{
+  background:#124633;
+  color:#c7ffe3;
+}
+
+.empty{
+  text-align:center;
+  padding:45px 15px;
+  color:var(--muted);
+}
+
+.empty .icon{
+  font-size:35px;
+  margin-bottom:12px;
+}
+
+/* MESSAGERIE */
 
 .chat-layout{
   display:grid;
-  grid-template-columns:320px 1fr;
-  height:calc(100vh - 70px);
+  grid-template-columns:300px minmax(0,1fr);
+  height:calc(100vh - 68px);
   min-height:500px;
 }
+
 .chat-list{
   border-right:1px solid var(--border);
   overflow-y:auto;
   padding:15px;
 }
-.chat-list h3{margin:8px 5px 15px}
+
 .chat-row{
+  display:flex;
+  align-items:center;
+  gap:12px;
   padding:12px 9px;
   border-radius:12px;
   cursor:pointer;
   margin-bottom:4px;
 }
-.chat-row:hover,.chat-row.selected{background:#153b2e}
-.chat-preview{flex:1;min-width:0}
+
+.chat-row:hover,
+.chat-row.selected{
+  background:#153b2e;
+}
+
+.chat-preview{
+  flex:1;
+  min-width:0;
+}
+
 .chat-preview strong{
   display:block;
   font-size:14px;
   margin-bottom:5px;
 }
+
 .chat-preview small{
   color:var(--muted);
   display:block;
@@ -310,27 +617,14 @@ button{cursor:pointer}
   overflow:hidden;
   text-overflow:ellipsis;
 }
-.chat-meta{
-  text-align:right;
-  font-size:10px;
-  color:var(--muted);
-}
-.badge{
-  display:inline-block;
-  background:var(--green);
-  color:#052016;
-  font-weight:bold;
-  font-size:10px;
-  padding:4px 7px;
-  border-radius:20px;
-  margin-top:6px;
-}
+
 .chat-window{
   display:flex;
   flex-direction:column;
   min-width:0;
   background:#081e17;
 }
+
 .chat-header{
   display:flex;
   align-items:center;
@@ -339,8 +633,7 @@ button{cursor:pointer}
   border-bottom:1px solid var(--border);
   min-height:65px;
 }
-.chat-header strong{display:block}
-.chat-header small{color:var(--muted)}
+
 .messages{
   flex:1;
   overflow-y:auto;
@@ -349,6 +642,7 @@ button{cursor:pointer}
   flex-direction:column;
   gap:10px;
 }
+
 .message{
   max-width:78%;
   padding:11px 13px;
@@ -356,43 +650,18 @@ button{cursor:pointer}
   background:#15382d;
   align-self:flex-start;
   overflow-wrap:anywhere;
-  position:relative;
 }
+
 .message.mine{
   align-self:flex-end;
   background:#075e46;
-  border-bottom-right-radius:4px;
 }
-.message:not(.mine){border-bottom-left-radius:4px}
-.message .body{white-space:pre-wrap;line-height:1.45}
-.message .time{
-  display:block;
-  text-align:right;
-  color:#b3d4c6;
-  font-size:10px;
-  margin-top:6px;
+
+.message .body{
+  white-space:pre-wrap;
+  line-height:1.45;
 }
-.message .reply-preview{
-  padding:7px;
-  border-left:3px solid var(--green);
-  background:#0002;
-  border-radius:5px;
-  margin-bottom:8px;
-  font-size:12px;
-  color:#c5e5d6;
-}
-.message-actions{
-  display:flex;
-  gap:8px;
-  justify-content:flex-end;
-  margin-top:7px;
-}
-.message-actions button{
-  background:none;
-  border:0;
-  color:#b6d9c8;
-  font-size:11px;
-}
+
 .composer{
   padding:13px;
   border-top:1px solid var(--border);
@@ -400,6 +669,7 @@ button{cursor:pointer}
   gap:9px;
   align-items:center;
 }
+
 .composer input{
   flex:1;
   min-width:0;
@@ -410,35 +680,30 @@ button{cursor:pointer}
   padding:13px 17px;
   outline:none;
 }
+
 .send-btn{
   border:0;
   background:var(--green);
   color:#052016;
-  width:44px;height:44px;
+  width:44px;
+  height:44px;
   border-radius:50%;
   font-weight:bold;
 }
-.reply-bar{
-  padding:8px 15px;
-  background:#15382d;
-  color:#d5f7e5;
-  font-size:12px;
-  display:flex;
-  justify-content:space-between;
+
+.back-btn{
+  border:0;
+  background:none;
+  color:var(--green);
+  font-size:22px;
 }
-.reply-bar button{
-  background:none;border:0;color:white;
-}
-.notice{
-  padding:12px;
-  border-radius:10px;
-  margin-bottom:15px;
-  font-size:13px;
+
+/* NAVIGATION MOBILE */
+
+.mobile-nav{
   display:none;
 }
-.notice.error{background:#51242c;color:#ffd6da}
-.notice.success{background:#124633;color:#c7ffe3}
-.mobile-nav{display:none}
+
 #toast{
   position:fixed;
   bottom:25px;
@@ -451,44 +716,57 @@ button{cursor:pointer}
   font-size:13px;
   font-weight:bold;
   z-index:30;
-  box-shadow:0 8px 30px #0005;
   display:none;
   max-width:90%;
   text-align:center;
 }
-@media(max-width:800px){
-  #app{display:block;padding-bottom:65px}
-  .sidebar{display:none}
-  .topbar{height:60px;padding:0 15px}
-  .content{padding:17px}
-  .chat-layout{
-    display:block;
-    height:calc(100vh - 125px);
-    min-height:0;
+
+/* TABLETTES */
+
+@media(max-width:1100px){
+  #app{
+    grid-template-columns:220px minmax(0,1fr);
   }
-  .chat-list{
-    border:0;
-    height:100%;
-    padding:12px;
-  }
-  .chat-window{
+
+  .rightbar{
     display:none;
-    height:100%;
   }
-  .chat-layout.conversation-open .chat-list{display:none}
-  .chat-layout.conversation-open .chat-window{display:flex}
-  .messages{padding:13px}
-  .message{max-width:88%}
+}
+
+/* TÉLÉPHONES */
+
+@media(max-width:700px){
+  #app{
+    display:block;
+    padding-bottom:68px;
+  }
+
+  .sidebar{
+    display:none;
+  }
+
+  .topbar{
+    height:58px;
+    padding:0 14px;
+  }
+
+  .content{
+    padding:13px;
+  }
+
   .mobile-nav{
     position:fixed;
-    bottom:0;left:0;right:0;
+    bottom:0;
+    left:0;
+    right:0;
     display:flex;
     height:65px;
     background:#091f18;
     border-top:1px solid var(--border);
-    z-index:10;
+    z-index:20;
     justify-content:space-around;
   }
+
   .mobile-nav button{
     flex:1;
     border:0;
@@ -496,22 +774,54 @@ button{cursor:pointer}
     color:#a9c7b8;
     font-size:10px;
   }
+
   .mobile-nav button span{
     display:block;
     font-size:20px;
     margin-bottom:3px;
   }
-  .mobile-nav button.active{color:var(--green)}
-  .back-btn{
-    border:0;background:none;color:var(--green);
-    font-size:20px;margin-right:5px;
+
+  .mobile-nav button.active{
+    color:var(--green);
   }
-  .toolbar{flex-wrap:wrap}
+
+  .chat-layout{
+    display:block;
+    height:calc(100vh - 123px);
+    min-height:0;
+  }
+
+  .chat-list{
+    height:100%;
+    border:0;
+  }
+
+  .chat-window{
+    display:none;
+    height:100%;
+  }
+
+  .chat-layout.conversation-open .chat-list{
+    display:none;
+  }
+
+  .chat-layout.conversation-open .chat-window{
+    display:flex;
+  }
+
+  .messages{
+    padding:13px;
+  }
+
+  .message{
+    max-width:88%;
+  }
 }
 </style>
-</head>
+</head><body>
 
-<body><div id="authScreen">
+<!-- AUTHENTIFICATION -->
+<div id="authScreen">
   <div class="auth-box">
     <div class="logo">NOVATALK 🌍</div>
     <div class="subtitle">CONNECT THE WORLD · BY MARUCE SOLDADO 🇬🇳</div>
@@ -562,7 +872,10 @@ button{cursor:pointer}
   </div>
 </div>
 
+<!-- APPLICATION -->
 <div id="app" class="hidden">
+
+  <!-- MENU GAUCHE -->
   <aside class="sidebar">
     <div class="brand">NOVATALK 🌍</div>
     <div class="brand-sub">CONNECT THE WORLD</div>
@@ -575,20 +888,29 @@ button{cursor:pointer}
       </div>
     </div>
 
-    <div class="nav-title">MENU PRINCIPAL</div>
-    <button class="nav-btn active" data-page="chats" onclick="navigate('chats')">💬 Discussions</button>
-    <button class="nav-btn" data-page="friends" onclick="navigate('friends')">🤝 Mes amis</button>
-    <button class="nav-btn" data-page="requests" onclick="navigate('requests')">
-      📩 Invitations <span class="count hidden" id="requestCount">0</span>
-    </button>
-    <button class="nav-btn" data-page="members" onclick="navigate('members')">🌍 Membres</button>
+    <div class="nav-title">RÉSEAU SOCIAL</div>
+
+    <button class="nav-btn active" data-page="home" onclick="navigate('home')">🏠 Accueil</button>
+    <button class="nav-btn" data-page="explore" onclick="navigate('explore')">🔎 Découvrir</button>
+    <button class="nav-btn" data-page="reels" onclick="navigate('reels')">🎬 Reels</button>
+    <button class="nav-btn" data-page="chats" onclick="navigate('chats')">💬 Messages</button>
+    <button class="nav-btn" data-page="friends" onclick="navigate('friends')">👥 Amis</button>
+    <button class="nav-btn" data-page="notifications" onclick="navigate('notifications')">🔔 Notifications</button>
+
+    <div class="nav-title">MON ESPACE</div>
+
+    <button class="nav-btn" data-page="profile" onclick="navigate('profile')">👤 Mon profil</button>
+    <button class="nav-btn" data-page="settings" onclick="navigate('settings')">⚙️ Paramètres</button>
+
     <button class="nav-btn logout" onclick="logout()">↪ Déconnexion</button>
   </aside>
 
+  <!-- CONTENU CENTRAL -->
   <main class="main">
+
     <header class="topbar">
       <div>
-        <h2 id="topTitle">Discussions</h2>
+        <h2 id="topTitle">Accueil</h2>
         <small>NOVATALK · Connect the World</small>
       </div>
       <div id="topUser" style="color:var(--green);font-size:12px"></div>
@@ -599,13 +921,16 @@ button{cursor:pointer}
       <div id="pageContent"></div>
     </div>
 
+    <!-- MESSAGERIE -->
     <div id="chatPage" class="chat-layout hidden">
+
       <div class="chat-list">
-        <h3>💬 Discussions</h3>
+        <h3>💬 Messages</h3>
         <div id="conversationList"></div>
       </div>
 
       <div class="chat-window">
+
         <div class="chat-header">
           <button class="back-btn" onclick="closeConversation()">‹</button>
           <div class="avatar" id="chatAvatar">?</div>
@@ -628,44 +953,84 @@ button{cursor:pointer}
           <input id="messageInput" placeholder="Écrire un message..." maxlength="5000">
           <button class="send-btn" onclick="sendMessage()">➤</button>
         </div>
+
       </div>
     </div>
+
   </main>
 
+  <!-- COLONNE DROITE -->
+  <aside class="rightbar">
+
+    <div class="right-card">
+      <h3>🌍 NOVATALK</h3>
+      <p>Connecte-toi avec le monde entier. Découvre, partage et échange avec ta communauté.</p>
+    </div>
+
+    <div class="right-card">
+      <h3>👤 Ton espace</h3>
+      <p>Complète ton profil et retrouve les autres membres de NOVATALK.</p>
+      <button class="action" style="margin-top:12px;width:100%" onclick="navigate('profile')">Voir mon profil</button>
+    </div>
+
+    <div class="right-card">
+      <h3>🤝 Communauté</h3>
+      <p>Découvre de nouvelles personnes et développe ton réseau.</p>
+      <button class="action" style="margin-top:12px;width:100%" onclick="navigate('explore')">Découvrir</button>
+    </div>
+
+    <div class="right-card">
+      <h3>🇬🇳 Créateur</h3>
+      <p>Une plateforme internationale créée par MARUCE SOLDADO.</p>
+    </div>
+
+  </aside>
+
+  <!-- NAVIGATION MOBILE -->
   <nav class="mobile-nav">
-    <button data-page="chats" class="active" onclick="navigate('chats')"><span>💬</span>Chats</button>
-    <button data-page="friends" onclick="navigate('friends')"><span>🤝</span>Amis</button>
-    <button data-page="requests" onclick="navigate('requests')"><span>📩</span>Invitations</button>
-    <button data-page="members" onclick="navigate('members')"><span>🌍</span>Membres</button>
+    <button data-page="home" class="active" onclick="navigate('home')"><span>🏠</span>Accueil</button>
+    <button data-page="explore" onclick="navigate('explore')"><span>🔎</span>Explorer</button>
+    <button data-page="reels" onclick="navigate('reels')"><span>🎬</span>Reels</button>
+    <button data-page="chats" onclick="navigate('chats')"><span>💬</span>Messages</button>
+    <button data-page="profile" onclick="navigate('profile')"><span>👤</span>Profil</button>
   </nav>
+
 </div>
 
-<div id="toast"></div>
-
-<script>
+<div id="toast"></div><script>
 "use strict";
 
-/* CONFIGURATION */
-const API_BASE = "https://novatalk-2yui.onrender.com/api";
-const TOKEN_KEY = "novatalk_token";
+/* =====================================
+   CONFIGURATION
+===================================== */
 
-let token = localStorage.getItem(TOKEN_KEY) || "";
-let currentUser = null;
-let currentPage = "chats";
-let currentConversation = null;
-let currentMessages = [];
-let replyTo = null;
-let conversations = [];
-let friends = [];
-let members = [];
-let incomingRequests = [];
-let refreshChatsTimer = null;
-let refreshMessagesTimer = null;
+const API_BASE="https://novatalk-2yui.onrender.com/api";
+const TOKEN_KEY="novatalk_token";
 
-const $ = id => document.getElementById(id);
+let token=localStorage.getItem(TOKEN_KEY)||"";
+let currentUser=null;
+let currentPage="home";
+let currentConversation=null;
+let currentMessages=[];
+let replyTo=null;
+
+let conversations=[];
+let friends=[];
+let members=[];
+let incomingRequests=[];
+let posts=[];
+
+let refreshChatsTimer=null;
+let refreshMessagesTimer=null;
+
+const $=id=>document.getElementById(id);
+
+/* =====================================
+   OUTILS
+===================================== */
 
 function escapeHTML(value){
-  return String(value ?? "").replace(/[&<>"']/g, c => ({
+  return String(value??"").replace(/[&<>"']/g,c=>({
     "&":"&amp;",
     "<":"&lt;",
     ">":"&gt;",
@@ -675,15 +1040,27 @@ function escapeHTML(value){
 }
 
 function getInitial(name){
-  return String(name || "?").trim().charAt(0).toUpperCase();
+  return String(name||"?").trim().charAt(0).toUpperCase();
+}
+
+function userId(user){
+  return user?.id||user?.user_id||"";
+}
+
+function userName(user){
+  return user?.full_name||user?.name||user?.username||"Utilisateur";
+}
+
+function userUsername(user){
+  return user?.username||"";
 }
 
 function toast(message){
-  const box = $("toast");
-  box.textContent = message;
-  box.style.display = "block";
+  const box=$("toast");
+  box.textContent=message;
+  box.style.display="block";
   clearTimeout(toast.timer);
-  toast.timer = setTimeout(()=>box.style.display="none",3000);
+  toast.timer=setTimeout(()=>box.style.display="none",3000);
 }
 
 function showNotice(id,message,type="error"){
@@ -699,7 +1076,11 @@ function hideNotice(id){
   if(box)box.style.display="none";
 }
 
-async function api(path, options={}){
+/* =====================================
+   API
+===================================== */
+
+async function api(path,options={}){
   const headers={
     "Content-Type":"application/json",
     ...(options.headers||{})
@@ -715,23 +1096,25 @@ async function api(path, options={}){
       headers
     });
   }catch(error){
-    throw new Error("Impossible de contacter le serveur. Vérifie ta connexion Internet.");
+    throw new Error("Impossible de contacter le serveur.");
   }
 
   let data={};
 
   try{
     data=await response.json();
-  }catch(e){}
+  }catch(error){}
 
-  if(!response.ok || data.success===false){
-    throw new Error(data.message || data.error || "Une erreur est survenue.");
+  if(!response.ok||data.success===false){
+    throw new Error(data.message||data.error||"Une erreur est survenue.");
   }
 
   return data;
 }
 
-/* AUTHENTIFICATION */
+/* =====================================
+   AUTHENTIFICATION
+===================================== */
 
 function showLogin(){
   $("loginForm").classList.remove("hidden");
@@ -745,13 +1128,11 @@ function showRegister(){
   hideNotice("authNotice");
 }
 
-/* CONNEXION CORRIGÉE */
-
 async function login(){
   const username=$("loginUsername").value.trim();
   const password=$("loginPassword").value;
 
-  if(!username || !password){
+  if(!username||!password){
     return showNotice("authNotice","Remplis tous les champs.");
   }
 
@@ -765,35 +1146,23 @@ async function login(){
       body:JSON.stringify({username,password})
     });
 
-    if(!data.token){
-      throw new Error("Le serveur n'a pas renvoyé de jeton de connexion.");
-    }
+    if(!data.token)throw new Error("Jeton de connexion absent.");
 
     token=data.token;
     localStorage.setItem(TOKEN_KEY,token);
 
-    currentUser=data.user || data.profile || null;
+    currentUser=data.user||data.profile||null;
 
-    if(!currentUser){
-      await loadProfile();
-    }
+    if(!currentUser)await loadProfile();
 
-    if(!currentUser){
-      throw new Error("Impossible de charger ton profil.");
-    }
-
-    hideNotice("authNotice");
     enterApp();
     toast("Bienvenue sur NOVATALK !");
 
   }catch(error){
-    console.error("ERREUR CONNEXION:",error);
-
     token="";
     currentUser=null;
     localStorage.removeItem(TOKEN_KEY);
-
-    showNotice("authNotice",error.message || "Connexion impossible.");
+    showNotice("authNotice",error.message);
 
   }finally{
     button.disabled=false;
@@ -801,15 +1170,13 @@ async function login(){
   }
 }
 
-/* INSCRIPTION CORRIGÉE */
-
 async function register(){
   const full_name=$("registerName").value.trim();
   const username=$("registerUsername").value.trim();
   const password=$("registerPassword").value;
   const confirm=$("registerConfirm").value;
 
-  if(!full_name || !username || !password || !confirm){
+  if(!full_name||!username||!password||!confirm){
     return showNotice("authNotice","Remplis tous les champs.");
   }
 
@@ -823,7 +1190,7 @@ async function register(){
 
   const button=$("registerButton");
   button.disabled=true;
-  button.textContent="Création du compte...";
+  button.textContent="Création...";
 
   try{
     const data=await api("/auth/register",{
@@ -834,25 +1201,16 @@ async function register(){
     if(data.token){
       token=data.token;
       localStorage.setItem(TOKEN_KEY,token);
+      currentUser=data.user||data.profile||null;
 
-      currentUser=data.user || data.profile || null;
-
-      if(!currentUser){
-        await loadProfile();
-      }
+      if(!currentUser)await loadProfile();
 
       enterApp();
-      toast("Ton compte NOVATALK est créé !");
-
+      toast("Compte créé avec succès !");
     }else{
       showLogin();
       $("loginUsername").value=username;
-
-      showNotice(
-        "authNotice",
-        "Compte créé. Connecte-toi avec ton identifiant et ton mot de passe.",
-        "success"
-      );
+      showNotice("authNotice","Compte créé. Connecte-toi maintenant.","success");
     }
 
   }catch(error){
@@ -864,36 +1222,28 @@ async function register(){
   }
 }
 
-/* PROFIL */
-
 async function loadProfile(){
   const data=await api("/auth/me");
 
-  if(!data.user){
-    throw new Error("Profil utilisateur introuvable.");
-  }
+  if(!data.user)throw new Error("Profil introuvable.");
 
   currentUser=data.user;
   return currentUser;
-}/* ENTRÉE DANS L'APPLICATION */
+}
 
 function enterApp(){
   $("authScreen").classList.add("hidden");
   $("app").classList.remove("hidden");
 
-  const name=currentUser.full_name ||
-    currentUser.name ||
-    currentUser.username ||
-    "Utilisateur";
-
-  const username=currentUser.username || "";
+  const name=userName(currentUser);
+  const username=userUsername(currentUser);
 
   $("sideName").textContent=name;
   $("sideUsername").textContent="@"+username;
   $("sideAvatar").textContent=getInitial(name);
   $("topUser").textContent="@"+username;
 
-  navigate("chats");
+  navigate("home");
   loadAllData();
 
   clearInterval(refreshChatsTimer);
@@ -905,7 +1255,7 @@ function enterApp(){
   },10000);
 
   refreshMessagesTimer=setInterval(()=>{
-    if(currentPage==="chats" && currentConversation){
+    if(currentPage==="chats"&&currentConversation){
       loadMessages(true);
     }
   },4000);
@@ -925,6 +1275,8 @@ async function restoreSession(){
 }
 
 function logout(){
+  if(!confirm("Veux-tu vraiment te déconnecter ?"))return;
+
   token="";
   currentUser=null;
   currentConversation=null;
@@ -938,10 +1290,11 @@ function logout(){
   $("authScreen").classList.remove("hidden");
 
   showLogin();
-  toast("Déconnexion effectuée.");
 }
 
-/* NAVIGATION */
+/* =====================================
+   NAVIGATION
+===================================== */
 
 function navigate(page){
   currentPage=page;
@@ -957,26 +1310,413 @@ function navigate(page){
   });
 
   const titles={
-    chats:"Discussions",
+    home:"Accueil",
+    explore:"Découvrir",
+    reels:"Reels",
+    chats:"Messages",
     friends:"Mes amis",
-    requests:"Invitations",
-    members:"Membres"
+    notifications:"Notifications",
+    profile:"Mon profil",
+    settings:"Paramètres"
   };
 
-  $("topTitle").textContent=titles[page] || "NOVATALK";
+  $("topTitle").textContent=titles[page]||"NOVATALK";
 
   if(page==="chats"){
     $("normalPage").classList.add("hidden");
     $("chatPage").classList.remove("hidden");
     loadConversations();
+    return;
   }
 
+  if(page==="home")renderHome();
+  if(page==="explore")renderExplore();
+  if(page==="reels")renderReels();
   if(page==="friends")renderFriends();
-  if(page==="requests")renderRequests();
-  if(page==="members")renderMembers();
+  if(page==="notifications")renderNotifications();
+  if(page==="profile")renderProfile();
+  if(page==="settings")renderSettings();
 }
 
-/* CHARGEMENT DES DONNÉES */
+/* =====================================
+   ACCUEIL
+===================================== */
+
+function renderHome(){
+  $("pageContent").innerHTML=`
+    <div class="feed">
+
+      <h1 class="page-title">Bienvenue sur NOVATALK 🌍</h1>
+      <p class="page-desc">Découvre ce qui se passe dans ta communauté.</p>
+
+      <div class="story-section">
+        <div class="story">
+          <div class="story-circle"><div>+</div></div>
+          <small>Ton statut</small>
+        </div>
+
+        <div class="story">
+          <div class="story-circle"><div>🌍</div></div>
+          <small>Découvrir</small>
+        </div>
+
+        <div class="story">
+          <div class="story-circle"><div>👥</div></div>
+          <small>Amis</small>
+        </div>
+      </div>
+
+      <div class="create-post">
+        <div class="create-post-top">
+          <div class="avatar">${escapeHTML(getInitial(userName(currentUser)))}</div>
+          <textarea id="postText" placeholder="Quoi de neuf ? Partage avec le monde..." maxlength="5000"></textarea>
+        </div>
+
+        <div class="create-post-actions">
+          <button class="post-action" onclick="toast('La publication de photos nécessite le service de stockage.')">📷 Photo</button>
+          <button class="post-action" onclick="toast('La publication de vidéos nécessite le service de stockage.')">🎬 Vidéo</button>
+          <button class="action" onclick="createPost()">Publier</button>
+        </div>
+      </div>
+
+      <div id="feedPosts">
+        <div class="empty">Chargement des publications...</div>
+      </div>
+
+    </div>
+  `;
+
+  loadPosts();
+}
+
+async function loadPosts(){
+  const container=$("feedPosts");
+  if(!container)return;
+
+  try{
+    const data=await api("/posts");
+    posts=data.posts||[];
+
+    renderPosts();
+
+  }catch(error){
+    container.innerHTML=`
+      <div class="empty">
+        <div class="icon">📰</div>
+        Le fil d'actualité n'est pas encore connecté au serveur.<br>
+        <small>Le backend doit fournir la route GET /api/posts.</small>
+      </div>
+    `;
+  }
+}
+
+function renderPosts(){
+  const container=$("feedPosts");
+  if(!container)return;
+
+  if(!posts.length){
+    container.innerHTML=`
+      <div class="empty">
+        <div class="icon">🌍</div>
+        Aucune publication pour le moment.<br>
+        Sois le premier à partager quelque chose !
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML=posts.map(post=>{
+    const author=post.user||post.author||{};
+    const name=userName(author);
+    const date=post.created_at
+      ?new Date(post.created_at).toLocaleString("fr-FR")
+      :"";
+
+    return `
+      <article class="post">
+        <div class="post-header">
+          <div class="avatar">${escapeHTML(getInitial(name))}</div>
+          <div class="post-user">
+            <strong>${escapeHTML(name)}</strong>
+            <small>@${escapeHTML(userUsername(author))} · ${escapeHTML(date)}</small>
+          </div>
+        </div>
+
+        <div class="post-text">${escapeHTML(post.content||"")}</div>
+
+        <div class="post-stats">
+          <span>❤️ ${Number(post.likes_count||0)} J'aime</span>
+          <span>${Number(post.comments_count||0)} commentaires</span>
+        </div>
+
+        <div class="post-buttons">
+          <button onclick="likePost('${escapeHTML(post.id)}')">❤️ J'aime</button>
+          <button onclick="commentPost('${escapeHTML(post.id)}')">💬 Commenter</button>
+          <button onclick="sharePost('${escapeHTML(post.id)}')">↗ Partager</button>
+        </div>
+      </article>
+    `;
+  }).join("");
+}
+
+async function createPost(){
+  const input=$("postText");
+  const content=input?.value.trim();
+
+  if(!content)return toast("Écris quelque chose avant de publier.");
+
+  try{
+    await api("/posts",{
+      method:"POST",
+      body:JSON.stringify({content})
+    });
+
+    toast("Publication envoyée !");
+    input.value="";
+    await loadPosts();
+
+  }catch(error){
+    toast("Publication impossible : "+error.message);
+  }
+}
+
+async function likePost(id){
+  try{
+    await api("/posts/"+encodeURIComponent(id)+"/like",{
+      method:"POST"
+    });
+
+    await loadPosts();
+
+  }catch(error){
+    toast(error.message);
+  }
+}
+
+async function commentPost(id){
+  const content=prompt("Écris ton commentaire :");
+  if(content===null||!content.trim())return;
+
+  try{
+    await api("/posts/"+encodeURIComponent(id)+"/comments",{
+      method:"POST",
+      body:JSON.stringify({content:content.trim()})
+    });
+
+    toast("Commentaire envoyé !");
+    await loadPosts();
+
+  }catch(error){
+    toast(error.message);
+  }
+}
+
+async function sharePost(id){
+  const link=location.href+"?publication="+encodeURIComponent(id);
+
+  try{
+    if(navigator.share){
+      await navigator.share({
+        title:"NOVATALK",
+        text:"Découvre cette publication sur NOVATALK",
+        url:link
+      });
+    }else{
+      await navigator.clipboard.writeText(link);
+      toast("Lien copié !");
+    }
+  }catch(error){}
+}
+
+/* =====================================
+   DÉCOUVRIR
+===================================== */
+
+function renderExplore(){
+  $("pageContent").innerHTML=`
+    <h1 class="page-title">🔎 Découvrir</h1>
+    <p class="page-desc">Trouve de nouvelles personnes sur NOVATALK.</p>
+
+    <div class="toolbar">
+      <input id="exploreSearch" placeholder="Rechercher un membre..." oninput="filterExplore()">
+    </div>
+
+    <div id="exploreResults"></div>
+  `;
+
+  filterExplore();
+}
+
+function filterExplore(){
+  const input=$("exploreSearch");
+  const container=$("exploreResults");
+
+  if(!input||!container)return;
+
+  const q=input.value.toLowerCase();
+
+  const results=members.filter(user=>{
+    if(String(userId(user))===String(userId(currentUser)))return false;
+
+    return userName(user).toLowerCase().includes(q)||
+      userUsername(user).toLowerCase().includes(q);
+  });
+
+  if(!results.length){
+    container.innerHTML='<div class="empty">Aucun membre trouvé.</div>';
+    return;
+  }
+
+  container.innerHTML=results.map(user=>`
+    <div class="card user-row">
+      <div class="avatar">${escapeHTML(getInitial(userName(user)))}</div>
+      <div class="user-details">
+        <strong>${escapeHTML(userName(user))}</strong>
+        <small>@${escapeHTML(userUsername(user))}</small>
+      </div>
+      <button class="action" onclick="sendInvitation('${escapeHTML(userUsername(user))}')">Ajouter</button>
+    </div>
+  `).join("");
+}
+
+/* =====================================
+   REELS
+===================================== */
+
+function renderReels(){
+  $("pageContent").innerHTML=`
+    <h1 class="page-title">🎬 NOVATALK Reels</h1>
+    <p class="page-desc">Découvre les vidéos courtes de la communauté.</p>
+
+    <div class="card empty">
+      <div class="icon">🎥</div>
+      <h3>Les Reels arrivent</h3>
+      <p style="margin-top:10px">
+        La publication et la lecture des vidéos nécessitent
+        un système de stockage et une API vidéo.
+      </p>
+    </div>
+  `;
+}
+
+/* =====================================
+   PROFIL
+===================================== */
+
+function renderProfile(){
+  const name=userName(currentUser);
+  const username=userUsername(currentUser);
+
+  $("pageContent").innerHTML=`
+    <h1 class="page-title">👤 Mon profil</h1>
+
+    <div class="card" style="padding:25px;text-align:center">
+      <div class="avatar" style="width:85px;height:85px;margin:auto;font-size:30px">
+        ${escapeHTML(getInitial(name))}
+      </div>
+
+      <h2 style="margin-top:15px">${escapeHTML(name)}</h2>
+      <p style="color:var(--muted);margin-top:6px">@${escapeHTML(username)}</p>
+
+      <div style="display:flex;justify-content:center;gap:30px;margin:22px 0">
+        <div><strong>${friends.length}</strong><br><small>Amis</small></div>
+        <div><strong>${posts.filter(p=>String(p.user_id)===String(userId(currentUser))).length}</strong><br><small>Publications chargées</small></div>
+      </div>
+
+      <p style="color:var(--muted);font-size:13px">
+        Bienvenue sur ton espace personnel NOVATALK.
+      </p>
+
+      <button class="action" style="margin-top:18px" onclick="navigate('settings')">
+        Modifier mes paramètres
+      </button>
+    </div>
+
+    <h3 style="margin:20px 0 12px">Mes publications</h3>
+    <div id="myPosts"></div>
+  `;
+
+  const mine=posts.filter(p=>
+    String(p.user_id||p.user?.id||p.author?.id)===String(userId(currentUser))
+  );
+
+  $("myPosts").innerHTML=mine.length
+    ?mine.map(p=>`
+      <div class="card">
+        ${escapeHTML(p.content||"")}
+      </div>
+    `).join("")
+    :'<div class="empty">Aucune publication personnelle chargée.</div>';
+}
+
+/* =====================================
+   NOTIFICATIONS
+===================================== */
+
+function renderNotifications(){
+  $("pageContent").innerHTML=`
+    <h1 class="page-title">🔔 Notifications</h1>
+    <p class="page-desc">Retrouve les nouvelles activités de ton compte.</p>
+
+    <div class="card">
+      <div class="user-row">
+        <div class="avatar">📩</div>
+        <div class="user-details">
+          <strong>Invitations reçues</strong>
+          <small>${incomingRequests.length} invitation(s) en attente</small>
+        </div>
+        <button class="action" onclick="navigate('friends')">Voir</button>
+      </div>
+    </div>
+
+    <div class="empty">
+      Les notifications de réactions et de commentaires nécessitent
+      une API de notifications sur le serveur.
+    </div>
+  `;
+}
+
+/* =====================================
+   PARAMÈTRES
+===================================== */
+
+function renderSettings(){
+  $("pageContent").innerHTML=`
+    <h1 class="page-title">⚙️ Paramètres</h1>
+    <p class="page-desc">Gère ton compte NOVATALK.</p>
+
+    <div class="card">
+      <h3>👤 Informations du compte</h3>
+      <p style="color:var(--muted);margin-top:10px">
+        Nom : ${escapeHTML(userName(currentUser))}
+      </p>
+      <p style="color:var(--muted);margin-top:7px">
+        Identifiant : @${escapeHTML(userUsername(currentUser))}
+      </p>
+    </div>
+
+    <div class="card">
+      <h3>🔐 Sécurité</h3>
+      <p style="color:var(--muted);margin-top:10px">
+        Protège ton mot de passe et ne le partage avec personne.
+      </p>
+    </div>
+
+    <div class="card">
+      <h3>🌍 À propos</h3>
+      <p style="color:var(--muted);margin-top:10px">
+        NOVATALK — Connect the World<br>
+        Créateur : MARUCE SOLDADO 🇬🇳
+      </p>
+    </div>
+
+    <button class="action danger" onclick="logout()">Se déconnecter</button>
+  `;
+}
+</script><script>
+/* =====================================
+   CHARGEMENT DES DONNÉES
+===================================== */
 
 async function loadAllData(){
   await Promise.allSettled([
@@ -985,167 +1725,101 @@ async function loadAllData(){
     loadMembers(),
     loadConversations()
   ]);
+
+  if(currentPage==="home")loadPosts();
 }
 
-async function loadFriends(){
-  try{
-    const data=await api("/friends");
-    friends=data.friends || data.users || [];
-
-    if(currentPage==="friends")renderFriends();
-  }catch(error){
-    console.error("Amis:",error);
-  }
-}
-
-async function loadRequests(){
-  try{
-    const data=await api("/friend-requests");
-    incomingRequests=data.requests || data.friend_requests || [];
-
-    updateRequestCount();
-
-    if(currentPage==="requests")renderRequests();
-  }catch(error){
-    console.error("Invitations:",error);
-  }
-}
+/* =====================================
+   MEMBRES
+===================================== */
 
 async function loadMembers(){
   try{
     const data=await api("/users");
-    members=data.users || data.members || [];
-
-    if(currentPage==="members")renderMembers();
+    members=data.users||data.members||[];
   }catch(error){
-    console.error("Membres:",error);
+    console.error("Chargement membres :",error.message);
+    members=[];
   }
 }
 
-async function loadConversations(){
+/* =====================================
+   AMIS
+===================================== */
+
+async function loadFriends(){
   try{
-    const data=await api("/conversations");
-    conversations=data.conversations || [];
-
-    renderConversations();
+    const data=await api("/friends");
+    friends=data.friends||[];
   }catch(error){
-    console.error("Discussions:",error);
+    console.error("Chargement amis :",error.message);
+    friends=[];
   }
 }
 
-/* OUTILS UTILISATEURS */
-
-function userId(user){
-  return user.id || user.user_id || "";
-}
-
-function userName(user){
-  return user.full_name || user.name || user.username || "Utilisateur";
-}
-
-function userUsername(user){
-  return user.username || "";
-}
-
-function findConversationUser(conversation){
-  return conversation.other_user ||
-    conversation.friend ||
-    conversation.recipient ||
-    conversation.user ||
-    conversation.partner ||
-    {};
-}
-
-function updateRequestCount(){
-  const count=incomingRequests.length;
-  const badge=$("requestCount");
-
-  badge.textContent=count;
-  badge.classList.toggle("hidden",count===0);
-
-  document.querySelectorAll('.mobile-nav button[data-page="requests"]').forEach(btn=>{
-    btn.title=count+" invitation(s)";
-  });
-}
-
-/* MEMBRES */
-
-function renderMembers(){
+function renderFriends(){
   $("pageContent").innerHTML=`
-    <h1 class="page-title">🌍 Membres NOVATALK</h1>
-    <p class="page-desc">Découvre les personnes inscrites sur NOVATALK et envoie-leur une invitation.</p>
+    <h1 class="page-title">👥 Mes amis</h1>
+    <p class="page-desc">Retrouve les personnes avec qui tu es connecté.</p>
 
-    <div class="toolbar">
-      <input id="memberSearch" placeholder="Rechercher un membre..." oninput="filterMembers()">
+    <div id="friendsList">
+      <div class="empty">Chargement...</div>
     </div>
-
-    <div id="memberResults"></div>
   `;
 
-  filterMembers();
+  displayFriends();
 }
 
-function filterMembers(){
-  const input=$("memberSearch");
-  if(!input)return;
+function displayFriends(){
+  const container=$("friendsList");
+  if(!container)return;
 
-  const q=input.value.toLowerCase();
-
-  const filtered=members.filter(user=>{
-    if(userId(user)===userId(currentUser))return false;
-
-    const name=userName(user).toLowerCase();
-    const username=userUsername(user).toLowerCase();
-
-    return name.includes(q)||username.includes(q);
-  });
-
-  const container=$("memberResults");
-
-  if(!filtered.length){
-    container.innerHTML='<div class="empty"><div class="icon">🌍</div>Aucun membre trouvé.</div>';
+  if(!friends.length){
+    container.innerHTML=`
+      <div class="empty">
+        <div class="icon">👥</div>
+        Tu n'as pas encore d'amis.<br>
+        Découvre des membres et envoie-leur une invitation.
+        <br><br>
+        <button class="action" onclick="navigate('explore')">Découvrir des membres</button>
+      </div>
+    `;
     return;
   }
 
-  container.innerHTML=filtered.map(user=>{
-    const id=userId(user);
-    const username=userUsername(user);
-
-    const isFriend=friends.some(f=>userId(f)===id);
-
-    const alreadySent=
-      user.request_sent===true ||
-      user.friend_request_sent===true;
-
-    let action="";
-
-    if(isFriend){
-      action='<button class="action secondary" disabled>Déjà ami</button>';
-    }else if(alreadySent){
-      action='<button class="action secondary" disabled>Invitation envoyée</button>';
-    }else{
-      action=`<button class="action" onclick="sendInvitation('${escapeHTML(username)}')">Ajouter</button>`;
-    }
-
+  container.innerHTML=friends.map(friend=>{
+    const user=friend.friend||friend.user||friend;
     return `
       <div class="card user-row">
         <div class="avatar">${escapeHTML(getInitial(userName(user)))}</div>
-
         <div class="user-details">
           <strong>${escapeHTML(userName(user))}</strong>
-          <small>@${escapeHTML(username)}</small>
+          <small>@${escapeHTML(userUsername(user))}</small>
         </div>
-
-        ${action}
+        <button class="action" onclick="startConversation('${escapeHTML(userId(user))}')">
+          Message
+        </button>
       </div>
     `;
   }).join("");
 }
 
-/* INVITATIONS */
+/* =====================================
+   INVITATIONS
+===================================== */
+
+async function loadRequests(){
+  try{
+    const data=await api("/friend-requests");
+    incomingRequests=data.requests||data.friend_requests||[];
+  }catch(error){
+    console.error("Chargement invitations :",error.message);
+    incomingRequests=[];
+  }
+}
 
 async function sendInvitation(username){
-  if(!username)return toast("Identifiant du membre indisponible.");
+  if(!username)return;
 
   try{
     await api("/friend-requests",{
@@ -1154,9 +1828,42 @@ async function sendInvitation(username){
     });
 
     toast("Invitation envoyée !");
+    await loadRequests();
 
-    await loadMembers();
-    renderMembers();
+  }catch(error){
+    toast(error.message);
+  }
+}
+
+async function acceptInvitation(id){
+  try{
+    await api("/friend-requests/"+encodeURIComponent(id)+"/accept",{
+      method:"POST"
+    });
+
+    toast("Invitation acceptée !");
+    await loadRequests();
+    await loadFriends();
+
+    if(currentPage==="friends")renderFriends();
+    if(currentPage==="notifications")renderNotifications();
+
+  }catch(error){
+    toast(error.message);
+  }
+}
+
+async function rejectInvitation(id){
+  try{
+    await api("/friend-requests/"+encodeURIComponent(id)+"/reject",{
+      method:"POST"
+    });
+
+    toast("Invitation refusée.");
+    await loadRequests();
+
+    if(currentPage==="friends")renderFriends();
+    if(currentPage==="notifications")renderNotifications();
 
   }catch(error){
     toast(error.message);
@@ -1166,355 +1873,220 @@ async function sendInvitation(username){
 function renderRequests(){
   $("pageContent").innerHTML=`
     <h1 class="page-title">📩 Invitations reçues</h1>
-    <p class="page-desc">Accepte ou refuse les demandes d'amitié.</p>
-    <div id="requestResults"></div>
+    <div id="requestsList"></div>
   `;
 
-  const container=$("requestResults");
+  const container=$("requestsList");
 
   if(!incomingRequests.length){
-    container.innerHTML='<div class="empty"><div class="icon">📭</div>Aucune invitation pour le moment.</div>';
+    container.innerHTML='<div class="empty">Aucune invitation en attente.</div>';
     return;
   }
 
   container.innerHTML=incomingRequests.map(request=>{
-    const sender=request.sender ||
-      request.from_user ||
-      request.user ||
-      {};
-
-    const name=userName(sender);
-    const username=userUsername(sender);
+    const sender=request.sender||request.user||request.from||{};
+    const id=request.id||request.request_id;
 
     return `
       <div class="card user-row">
-        <div class="avatar">${escapeHTML(getInitial(name))}</div>
-
+        <div class="avatar">${escapeHTML(getInitial(userName(sender)))}</div>
         <div class="user-details">
-          <strong>${escapeHTML(name)}</strong>
-          <small>@${escapeHTML(username)} souhaite devenir ton ami</small>
+          <strong>${escapeHTML(userName(sender))}</strong>
+          <small>@${escapeHTML(userUsername(sender))}</small>
         </div>
-
-        <button class="action" onclick="respondRequest('${escapeHTML(request.id)}','accept')">Accepter</button>
-
-        <button class="action danger" onclick="respondRequest('${escapeHTML(request.id)}','reject')">Refuser</button>
+        <button class="action" onclick="acceptInvitation('${escapeHTML(id)}')">Accepter</button>
+        <button class="action danger" onclick="rejectInvitation('${escapeHTML(id)}')">Refuser</button>
       </div>
     `;
   }).join("");
 }
 
-async function respondRequest(id,action){
+/* =====================================
+   CONVERSATIONS
+===================================== */
+
+async function loadConversations(){
   try{
-    await api("/friend-requests/"+encodeURIComponent(id)+"/respond",{
-      method:"POST",
-      body:JSON.stringify({action})
-    });
+    const data=await api("/conversations");
+    conversations=data.conversations||[];
 
-    toast(action==="accept"?"Invitation acceptée !":"Invitation refusée.");
-
-    await Promise.all([
-      loadRequests(),
-      loadFriends(),
-      loadMembers()
-    ]);
-
-    renderRequests();
+    if(currentPage==="chats")renderConversationList();
 
   }catch(error){
-    toast(error.message);
+    console.error("Chargement conversations :",error.message);
   }
 }
 
-/* AMIS */
+function conversationOtherUser(conversation){
+  if(conversation.other_user)return conversation.other_user;
+  if(conversation.friend)return conversation.friend;
+  if(conversation.user)return conversation.user;
 
-function renderFriends(){
-  $("pageContent").innerHTML=`
-    <h1 class="page-title">🤝 Mes amis</h1>
-    <p class="page-desc">Retrouve tes amis et démarre une discussion.</p>
-    <div id="friendResults"></div>
-  `;
+  const participants=conversation.participants||[];
 
-  const container=$("friendResults");
-
-  if(!friends.length){
-    container.innerHTML=`
-      <div class="empty">
-        <div class="icon">🤝</div>
-        Tu n'as pas encore d'amis.<br>
-        Découvre les membres et envoie une invitation.
-      </div>
-    `;
-    return;
-  }
-
-  container.innerHTML=friends.map(friend=>`
-    <div class="card user-row">
-      <div class="avatar">${escapeHTML(getInitial(userName(friend)))}</div>
-
-      <div class="user-details">
-        <strong>${escapeHTML(userName(friend))}</strong>
-        <small>@${escapeHTML(userUsername(friend))}</small>
-      </div>
-
-      <button class="action" onclick="startConversation('${escapeHTML(userUsername(friend))}')">Message</button>
-    </div>
-  `).join("");
+  return participants.find(p=>
+    String(userId(p))!==String(userId(currentUser))
+  )||{};
 }
 
-/* CONVERSATIONS */
-
-function conversationTitle(conversation){
-  const other=findConversationUser(conversation);
-  return userName(other);
-}
-
-function renderConversations(){
+function renderConversationList(){
   const container=$("conversationList");
   if(!container)return;
 
   if(!conversations.length){
     container.innerHTML=`
       <div class="empty">
-        <div class="icon">💬</div>
-        Aucune discussion.<br>
-        Ajoute un membre pour commencer.
+        Aucune conversation pour le moment.<br><br>
+        <button class="action" onclick="navigate('explore')">Trouver des amis</button>
       </div>
     `;
     return;
   }
 
   container.innerHTML=conversations.map(conversation=>{
-    const title=conversationTitle(conversation);
-
-    const last=conversation.last_message ||
-      conversation.latest_message ||
-      {};
-
-    const preview=last.content ||
-      conversation.last_message_content ||
-      "Commencez à discuter";
-
-    const unread=Number(conversation.unread_count || 0);
-
-    const date=last.created_at ||
-      conversation.updated_at ||
-      last.updated_at;
-
-    const selected=currentConversation &&
-      currentConversation.id===conversation.id;
+    const other=conversationOtherUser(conversation);
+    const id=conversation.id||conversation.conversation_id;
 
     return `
-      <div class="chat-row ${selected?'selected':''}" onclick="openConversation('${escapeHTML(conversation.id)}')">
-        <div class="avatar">${escapeHTML(getInitial(title))}</div>
-
-        <div class="chat-preview">
-          <strong>${escapeHTML(title)}</strong>
-          <small>${escapeHTML(preview)}</small>
+      <button class="conversation-item"
+        onclick="openConversation('${escapeHTML(id)}')">
+        <div class="avatar">${escapeHTML(getInitial(userName(other)))}</div>
+        <div class="conversation-info">
+          <strong>${escapeHTML(userName(other))}</strong>
+          <small>${escapeHTML(conversation.last_message||"Ouvrir la conversation")}</small>
         </div>
-
-        <div class="chat-meta">
-          ${date?formatTime(date):""}
-          ${unread?`<br><span class="badge">${unread}</span>`:""}
-        </div>
-      </div>
+      </button>
     `;
   }).join("");
 }
 
-async function startConversation(username){
-  if(!username)return toast("Identifiant de cet ami indisponible.");
-
+async function startConversation(friendId){
   try{
     const data=await api("/conversations",{
       method:"POST",
-      body:JSON.stringify({username})
+      body:JSON.stringify({user_id:friendId})
     });
 
-    const conversation=data.conversation || data;
+    const conversation=data.conversation||data;
+    const id=conversation.id||conversation.conversation_id;
 
-    if(!conversation.id){
-      throw new Error("La conversation n'a pas pu être ouverte.");
-    }
+    if(!id)throw new Error("Conversation introuvable.");
 
-    await loadConversations();
     navigate("chats");
-    await openConversation(conversation.id);
+    await loadConversations();
+    await openConversation(id);
 
   }catch(error){
-    toast(error.message);
+    toast("Impossible d'ouvrir la conversation : "+error.message);
   }
 }
 
 async function openConversation(id){
-  const conversation=conversations.find(c=>String(c.id)===String(id));
-  if(!conversation)return;
+  currentConversation=id;
 
-  currentConversation=conversation;
-  replyTo=null;
-
-  $("replyBar").classList.add("hidden");
-
-  const other=findConversationUser(conversation);
-
-  $("chatName").textContent=conversationTitle(conversation);
-  $("chatUsername").textContent=other.username?"@"+other.username:"";
-  $("chatAvatar").textContent=getInitial(conversationTitle(conversation));
-
+  $("chatPage").classList.remove("hidden");
+  $("normalPage").classList.add("hidden");
   $("chatPage").classList.add("conversation-open");
 
-  renderConversations();
+  const conversation=conversations.find(c=>
+    String(c.id||c.conversation_id)===String(id)
+  );
 
-  await loadMessages(false);
+  const other=conversation?conversationOtherUser(conversation):{};
 
-  $("messageInput").focus();
+  $("chatName").textContent=userName(other);
+  $("chatUsername").textContent="@"+userUsername(other);
+  $("chatAvatar").textContent=getInitial(userName(other));
+
+  await loadMessages();
 }
 
-/* MESSAGES */
-
-function formatTime(value){
-  if(!value)return "";
-
-  const date=new Date(value);
-
-  if(Number.isNaN(date.getTime()))return "";
-
-  return date.toLocaleTimeString("fr-FR",{
-    hour:"2-digit",
-    minute:"2-digit"
-  });
-}
-
-function formatDate(value){
-  if(!value)return "";
-
-  const date=new Date(value);
-
-  if(Number.isNaN(date.getTime()))return "";
-
-  return date.toLocaleDateString("fr-FR");
-}
+/* =====================================
+   MESSAGES
+===================================== */
 
 async function loadMessages(silent=false){
   if(!currentConversation)return;
 
   try{
     const data=await api(
-      "/conversations/"+encodeURIComponent(currentConversation.id)+"/messages"
+      "/conversations/"+encodeURIComponent(currentConversation)+"/messages"
     );
 
-    const messages=data.messages || [];
-
-    const oldLast=currentMessages.length
-      ?currentMessages[currentMessages.length-1].id
-      :null;
-
-    currentMessages=messages;
-
+    currentMessages=data.messages||[];
     renderMessages();
 
-    const newLast=messages.length
-      ?messages[messages.length-1].id
-      :null;
-
-    if(!silent || oldLast!==newLast){
-      $("messages").scrollTop=$("messages").scrollHeight;
-    }
-
-    if(!silent)await loadConversations();
-
   }catch(error){
-    if(!silent)toast(error.message);
+    if(!silent){
+      $("messages").innerHTML=`
+        <div class="empty">
+          Impossible de charger les messages.<br>
+          <small>${escapeHTML(error.message)}</small>
+        </div>
+      `;
+    }
   }
 }
 
 function renderMessages(){
   const container=$("messages");
+  if(!container)return;
 
   if(!currentMessages.length){
-    container.innerHTML='<div class="empty">Aucun message. Envoie le premier message !</div>';
+    container.innerHTML=`
+      <div class="empty">
+        <div class="icon">💬</div>
+        Commence cette conversation !
+      </div>
+    `;
     return;
   }
 
   container.innerHTML=currentMessages.map(message=>{
-    const mine=String(message.sender_id)===String(userId(currentUser));
+    const mine=String(message.sender_id||message.user_id)===
+      String(userId(currentUser));
 
-    const reply=message.reply_to;
-    let replyHTML="";
-
-    if(reply){
-      const replied=currentMessages.find(m=>String(m.id)===String(reply));
-
-      if(replied){
-        replyHTML=`<div class="reply-preview">${escapeHTML(String(replied.content||"").slice(0,120))}</div>`;
-      }
-    }
-
-    const deleted=Boolean(message.deleted_at);
-
-    const body=deleted
-      ?"Ce message a été supprimé."
-      :message.content;
-
-    const time=formatTime(message.created_at);
-    const edited=message.edited_at?" · modifié":"";
-    const read=mine?(message.is_read?" ✓✓":" ✓"):"";
+    const date=message.created_at
+      ?new Date(message.created_at).toLocaleTimeString("fr-FR",{
+        hour:"2-digit",
+        minute:"2-digit"
+      })
+      :"";
 
     return `
-      <div class="message ${mine?'mine':''}">
-        ${replyHTML}
-
-        <div class="body">${escapeHTML(body)}</div>
-
-        <span class="time">${escapeHTML(time)}${edited}${read}</span>
-
-        ${!deleted?`
-          <div class="message-actions">
-            <button onclick="replyMessage('${escapeHTML(message.id)}')">Répondre</button>
-
-            ${mine?`
-              <button onclick="editMessage('${escapeHTML(message.id)}')">Modifier</button>
-              <button onclick="deleteMessage('${escapeHTML(message.id)}')">Supprimer</button>
-            `:""}
-          </div>
-        `:""}
+      <div class="message ${mine?"mine":"theirs"}">
+        <div class="message-bubble">${escapeHTML(message.content||message.message||"")}</div>
+        <small>${escapeHTML(date)}</small>
       </div>
     `;
   }).join("");
+
+  container.scrollTop=container.scrollHeight;
 }
 
-/* ENVOI DES MESSAGES */
-
 async function sendMessage(){
-  if(!currentConversation)return toast("Choisis une discussion.");
-
   const input=$("messageInput");
-  const content=input.value.trim();
+  const content=input?.value.trim();
 
-  if(!content)return;
-
-  const payload={content};
-
-  if(replyTo)payload.reply_to=replyTo;
+  if(!content||!currentConversation)return;
 
   input.disabled=true;
 
   try{
     await api(
-      "/conversations/"+encodeURIComponent(currentConversation.id)+"/messages",
+      "/conversations/"+encodeURIComponent(currentConversation)+"/messages",
       {
         method:"POST",
-        body:JSON.stringify(payload)
+        body:JSON.stringify({content})
       }
     );
 
     input.value="";
-    cancelReply();
-
-    await loadMessages(false);
+    await loadMessages(true);
     await loadConversations();
 
   }catch(error){
-    toast(error.message);
+    toast("Envoi impossible : "+error.message);
 
   }finally{
     input.disabled=false;
@@ -1522,98 +2094,50 @@ async function sendMessage(){
   }
 }
 
-/* RÉPONSES */
+/* =====================================
+   RETOUR À LA LISTE DES DISCUSSIONS
+===================================== */
 
-function replyMessage(id){
-  const message=currentMessages.find(m=>String(m.id)===String(id));
-  if(!message)return;
-
-  replyTo=id;
-
-  $("replyText").textContent=
-    "Réponse à : "+String(message.content||"").slice(0,100);
-
-  $("replyBar").classList.remove("hidden");
-  $("messageInput").focus();
-}
-
-function cancelReply(){
-  replyTo=null;
-  $("replyBar").classList.add("hidden");
-}
-
-/* MODIFICATION DES MESSAGES */
-
-async function editMessage(id){
-  const message=currentMessages.find(m=>String(m.id)===String(id));
-  if(!message)return;
-
-  const content=prompt(
-    "Modifier ton message :",
-    message.content||""
-  );
-
-  if(content===null)return;
-
-  if(!content.trim()){
-    return toast("Le message ne peut pas être vide.");
-  }
-
-  try{
-    await api("/messages/"+encodeURIComponent(id),{
-      method:"PATCH",
-      body:JSON.stringify({content:content.trim()})
-    });
-
-    toast("Message modifié.");
-    await loadMessages(false);
-
-  }catch(error){
-    toast(error.message);
-  }
-}
-
-/* SUPPRESSION DES MESSAGES */
-
-async function deleteMessage(id){
-  if(!confirm("Veux-tu vraiment supprimer ce message ?"))return;
-
-  try{
-    await api("/messages/"+encodeURIComponent(id),{
-      method:"DELETE"
-    });
-
-    toast("Message supprimé.");
-
-    await loadMessages(false);
-    await loadConversations();
-
-  }catch(error){
-    toast(error.message);
-  }
-}
-
-/* FERMER UNE CONVERSATION */
-
-function closeConversation(){
+function backToConversations(){
   currentConversation=null;
-  replyTo=null;
-
   $("chatPage").classList.remove("conversation-open");
-
-  renderConversations();
+  loadConversations();
 }
 
-/* ENTRÉE POUR ENVOYER */
+/* =====================================
+   ÉVÉNEMENTS
+===================================== */
 
-$("messageInput").addEventListener("keydown",event=>{
-  if(event.key==="Enter" && !event.shiftKey){
-    event.preventDefault();
-    sendMessage();
-  }
+document.querySelectorAll("[data-page]").forEach(button=>{
+  button.addEventListener("click",()=>{
+    navigate(button.dataset.page);
+  });
 });
 
-/* DÉMARRAGE */
+if($("loginButton")){
+  $("loginButton").addEventListener("click",login);
+}
+
+if($("registerButton")){
+  $("registerButton").addEventListener("click",register);
+}
+
+if($("messageInput")){
+  $("messageInput").addEventListener("keydown",event=>{
+    if(event.key==="Enter"&&!event.shiftKey){
+      event.preventDefault();
+      sendMessage();
+    }
+  });
+}
+
+if($("sendMessageButton")){
+  $("sendMessageButton").addEventListener("click",sendMessage);
+}
+
+/* =====================================
+   DÉMARRAGE
+===================================== */
 
 restoreSession();
 
