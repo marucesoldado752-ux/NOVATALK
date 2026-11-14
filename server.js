@@ -1,10 +1,13 @@
 /* =========================================================
-   NOVATALK V4.0.0 — BACKEND COMPLET
-   CONNECT THE WORLD 🌍
+   NOVATALK V4 🌍
+   CONNECT THE WORLD
    BY MARUCE SOLDADO 🇬🇳
+   SERVEUR COMPLET
    ========================================================= */
 
 "use strict";
+
+/* ================= IMPORTATIONS ================= */
 
 const express = require("express");
 const cors = require("cors");
@@ -14,130 +17,97 @@ const jwt = require("jsonwebtoken");
 const rateLimit = require("express-rate-limit");
 const { createClient } = require("@supabase/supabase-js");
 
+/* ================= CONFIGURATION ================= */
+
 const app = express();
-const PORT = process.env.PORT || 10000;
+
+const PORT = process.env.PORT || 3000;
 const VERSION = "4.0.0";
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const JWT_SECRET = process.env.JWT_SECRET;
-const FRONTEND_URL = process.env.FRONTEND_URL || "*";
+const SUPABASE_SERVICE_ROLE_KEY =
+  process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-if (!SUPABASE_URL || !SUPABASE_KEY || !JWT_SECRET) {
-  console.error("CONFIGURATION MANQUANTE");
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !JWT_SECRET) {
+  console.error("ERREUR : Variables d'environnement manquantes.");
   process.exit(1);
 }
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false
-  }
-});
+/* ================= SUPABASE ================= */
 
-app.set("trust proxy", 1);
+const supabase = createClient(
+  SUPABASE_URL,
+  SUPABASE_SERVICE_ROLE_KEY,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  }
+);
+
+/* ================= MIDDLEWARES ================= */
 
 app.use(helmet({
-  crossOriginResourcePolicy: {
-    policy: "cross-origin"
-  }
+  crossOriginResourcePolicy: false
 }));
 
 app.use(cors({
-  origin: FRONTEND_URL === "*"
-    ? true
-    : FRONTEND_URL.split(",").map(x => x.trim()),
-  credentials: true
+  origin: [
+    "https://marucesoldado752-ux.github.io",
+    "http://localhost:3000",
+    "http://127.0.0.1:5500"
+  ],
+  methods: [
+    "GET",
+    "POST",
+    "PUT",
+    "PATCH",
+    "DELETE",
+    "OPTIONS"
+  ],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization"
+  ]
 }));
 
-app.use(express.json({ limit: "15mb" }));
+app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({
   extended: true,
-  limit: "15mb"
+  limit: "10mb"
 }));
 
-const apiLimiter = rateLimit({
+const limiter = rateLimit({
   windowMs: 60 * 1000,
-  limit: 100,
-  standardHeaders: "draft-7",
+  max: 100,
+  standardHeaders: true,
   legacyHeaders: false,
   message: {
     success: false,
-    error: "Trop de requêtes. Réessaie dans une minute."
+    error: "Trop de requêtes. Réessayez plus tard."
   }
 });
 
-app.use("/api", apiLimiter);
+app.use("/api", limiter);
 
-const asyncRoute = fn => (req, res, next) =>
-  Promise.resolve(fn(req, res, next)).catch(next);
+/* ================= OUTILS ================= */
 
-const fail = (res, status, error) =>
-  res.status(status).json({
-    success: false,
-    error
-  });
-
-const dbError = (res, error, status = 400) => {
-  console.error("SUPABASE:", error?.message || error);
-  return fail(
-    res,
-    status,
-    error?.message || "Erreur de base de données."
-  );
-};
-
-const cleanText = (value, max = 5000) =>
-  typeof value === "string"
-    ? value.trim().slice(0, max)
-    : "";
-
-const validUuid = value =>
-  typeof value === "string" &&
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
-
-function makeToken(user) {
-  return jwt.sign(
-    {
-      sub: user.id,
-      username: user.username
-    },
-    JWT_SECRET,
-    { expiresIn: "7d" }
-  );
+function asyncRoute(handler) {
+  return (req, res, next) => {
+    Promise.resolve(handler(req, res, next))
+      .catch(next);
+  };
 }
 
-const auth = asyncRoute(async (req, res, next) => {
-  const header = req.headers.authorization || "";
-
-  const token = header.startsWith("Bearer ")
-    ? header.slice(7)
-    : null;
-
-  if (!token) {
-    return fail(res, 401, "Connexion requise.");
-  }
-
-  try {
-    const payload = jwt.verify(token, JWT_SECRET);
-
-    req.userId = payload.sub;
-    req.username = payload.username || "";
-
-    next();
-  } catch {
-    return fail(
-      res,
-      401,
-      "Session expirée. Reconnecte-toi."
-    );
-  }
-});
+/* ================= UTILISATEUR ================= */
 
 async function getUserById(id) {
   const { data, error } = await supabase
     .from("novatalk_users")
-    .select("id, full_name, username, created_at")
+    .select("*")
     .eq("id", id)
     .maybeSingle();
 
@@ -146,75 +116,133 @@ async function getUserById(id) {
   return data;
 }
 
+/* ================= AUTHENTIFICATION ================= */
+
+const auth = asyncRoute(async (req, res, next) => {
+  const header = req.headers.authorization || "";
+
+  if (!header.startsWith("Bearer ")) {
+    return res.status(401).json({
+      success: false,
+      error: "Authentification requise"
+    });
+  }
+
+  const token = header.substring(7).trim();
+
+  if (!token) {
+    return res.status(401).json({
+      success: false,
+      error: "Token manquant"
+    });
+  }
+
+  let payload;
+
+  try {
+    payload = jwt.verify(token, JWT_SECRET);
+  } catch {
+    return res.status(401).json({
+      success: false,
+      error: "Session invalide ou expirée"
+    });
+  }
+
+  const user = await getUserById(payload.sub);
+
+  if (!user) {
+    return res.status(401).json({
+      success: false,
+      error: "Utilisateur introuvable"
+    });
+  }
+
+  req.userId = user.id;
+  req.username = user.username || "";
+
+  req.user = {
+    ...user,
+    id: user.id
+  };
+
+  next();
+});
+
+/* ================= NOTIFICATIONS ================= */
+
 async function notify(
   userId,
   actorId,
   type,
   title,
   message,
-  referenceId,
-  referenceType
+  referenceId = null,
+  referenceType = null
 ) {
-  if (!userId || userId === actorId) return;
-
   const { error } = await supabase
     .from("novatalk_notifications")
     .insert({
       user_id: userId,
-      actor_id: actorId || null,
-      notification_type: type,
-      title: title || null,
-      message: message || null,
-      reference_id: referenceId || null,
-      reference_type: referenceType || null
+      actor_id: actorId,
+      type,
+      title,
+      message,
+      reference_id: referenceId,
+      reference_type: referenceType,
+      is_read: false
     });
 
   if (error) {
-    console.error(
-      "Notification non créée:",
-      error.message
-    );
+    console.error("NOTIFICATION ERROR:", error);
   }
 }
 
-async function isBlockedEitherWay(a, b) {
+/* ================= BLOQUER / VÉRIFIER ================= */
+
+async function isBlockedEitherWay(userA, userB) {
   const { data, error } = await supabase
     .from("novatalk_blocks")
     .select("id")
     .or(
-      `and(blocker_id.eq.${a},blocked_id.eq.${b}),and(blocker_id.eq.${b},blocked_id.eq.${a})`
+      `and(blocker_id.eq.${userA},blocked_id.eq.${userB}),and(blocker_id.eq.${userB},blocked_id.eq.${userA})`
     )
     .limit(1);
 
   if (error) throw error;
 
-  return !!(data && data.length);
+  return Boolean(data && data.length);
 }
 
-async function areFriends(a, b) {
+/* ================= AMITIÉ ================= */
+
+async function areFriends(userA, userB) {
   const { data, error } = await supabase
     .from("novatalk_friends")
     .select("id")
-    .eq("user_id", a)
-    .eq("friend_id", b)
+    .eq("user_id", userA)
+    .eq("friend_id", userB)
     .maybeSingle();
 
   if (error) throw error;
 
-  return !!data;
+  return Boolean(data);
 }
 
-async function ensureProfile(user) {
-  if (!user) return null;
+/* ================= PROFIL UTILISATEUR ================= */
 
-  const { data: existing, error: readError } =
+async function ensureProfile(user) {
+  if (!user || !user.id) {
+    throw new Error("Utilisateur invalide");
+  }
+
+  const { data: existing, error: findError } =
     await supabase
       .from("novatalk_profiles")
       .select("*")
       .eq("user_id", user.id)
       .maybeSingle();
 
-  if (readError) throw readError;
+  if (findError) throw findError;
 
   if (existing) return existing;
 
@@ -222,10 +250,13 @@ async function ensureProfile(user) {
     .from("novatalk_profiles")
     .insert({
       user_id: user.id,
-      display_name: user.full_name || user.username,
-      username: user.username
+      full_name: user.full_name || "",
+      username: user.username || "",
+      bio: "",
+      avatar_url: null,
+      cover_url: null
     })
-    .select("*")
+    .select()
     .single();
 
   if (error) throw error;
@@ -233,22 +264,35 @@ async function ensureProfile(user) {
   return data;
 }
 
+/* ================= PARAMÈTRES PAR DÉFAUT ================= */
+
 async function ensureSettings(userId) {
-  const { data: existing, error: readError } =
+  const { data: existing, error: findError } =
     await supabase
       .from("novatalk_user_settings")
       .select("*")
       .eq("user_id", userId)
       .maybeSingle();
 
-  if (readError) throw readError;
+  if (findError) throw findError;
 
   if (existing) return existing;
 
   const { data, error } = await supabase
     .from("novatalk_user_settings")
-    .insert({ user_id: userId })
-    .select("*")
+    .insert({
+      user_id: userId,
+      private_account: false,
+      allow_messages: true,
+      allow_comments: true,
+      allow_tagging: true,
+      show_online_status: true,
+      show_read_receipts: true,
+      push_notifications: true,
+      language: "fr",
+      theme: "dark"
+    })
+    .select()
     .single();
 
   if (error) throw error;
@@ -256,254 +300,462 @@ async function ensureSettings(userId) {
   return data;
 }
 
-/* SYSTEME */
+/* ================= ROUTE ACCUEIL ================= */
 
 app.get("/", (req, res) => {
   res.json({
     success: true,
-    app: "NOVATALK",
+    application: "NOVATALK",
     slogan: "CONNECT THE WORLD",
     creator: "MARUCE SOLDADO 🇬🇳",
-    version: VERSION
+    version: VERSION,
+    server: "online"
   });
 });
 
-app.get("/health", asyncRoute(async (req, res) => {
-  const { error } = await supabase
-    .from("novatalk_users")
-    .select("id")
-    .limit(1);
+/* ================= SANTÉ DU SERVEUR ================= */
 
-  if (error) {
-    return res.status(503).json({
+app.get("/health", async (req, res) => {
+  try {
+    const { error } = await supabase
+      .from("novatalk_users")
+      .select("id")
+      .limit(1);
+
+    if (error) throw error;
+
+    res.json({
+      success: true,
+      server: "online",
+      database: "configured",
+      version: VERSION
+    });
+
+  } catch (error) {
+    console.error("HEALTH CHECK:", error);
+
+    res.status(503).json({
       success: false,
       server: "online",
       database: "error",
-      version: VERSION,
-      message: error.message
+      version: VERSION
     });
   }
+});
 
-  res.json({
-    success: true,
-    server: "online",
-    database: "configured",
-    version: VERSION
-  });
-}));
+/* =========================================================
+   FIN PARTIE 1/4
+   NE PAS AJOUTER app.listen() ICI.
+   ========================================================= *//* =========================================================
+   PARTIE 2/4 — COMPTES, PROFILS ET RELATIONS
+   ========================================================= */
 
-/* INSCRIPTION */
+/* ================= INSCRIPTION ================= */
 
-async function registerHandler(req, res) {
-  const full_name = cleanText(
-    req.body.full_name || req.body.name,
-    100
-  );
+async function registerUser(req, res) {
+  try {
+    const fullName = String(req.body.full_name || "").trim();
+    const username = String(req.body.username || "")
+      .trim()
+      .toLowerCase();
 
-  const username = cleanText(
-    req.body.username,
-    30
-  ).replace(/^@/, "").toLowerCase();
+    const password = String(req.body.password || "");
 
-  const password =
-    typeof req.body.password === "string"
-      ? req.body.password
-      : "";
+    if (fullName.length < 2 || fullName.length > 80) {
+      return res.status(400).json({
+        success: false,
+        error: "Nom complet invalide"
+      });
+    }
 
-  if (full_name.length < 2) {
-    return fail(res, 400, "Entre ton nom complet.");
-  }
+    if (!/^[a-z0-9_.]{3,30}$/.test(username)) {
+      return res.status(400).json({
+        success: false,
+        error: "Nom d'utilisateur invalide (3 à 30 caractères)"
+      });
+    }
 
-  if (!/^[a-z0-9_.]{3,30}$/.test(username)) {
-    return fail(
-      res,
-      400,
-      "Nom d'utilisateur invalide."
-    );
-  }
+    if (password.length < 8 || password.length > 100) {
+      return res.status(400).json({
+        success: false,
+        error: "Le mot de passe doit contenir au moins 8 caractères"
+      });
+    }
 
-  if (password.length < 6) {
-    return fail(
-      res,
-      400,
-      "Le mot de passe doit contenir au moins 6 caractères."
-    );
-  }
+    const { data: existing, error: findError } =
+      await supabase
+        .from("novatalk_users")
+        .select("id")
+        .eq("username", username)
+        .maybeSingle();
 
-  const { data: duplicate, error: checkError } =
-    await supabase
+    if (findError) throw findError;
+
+    if (existing) {
+      return res.status(409).json({
+        success: false,
+        error: "Ce nom d'utilisateur est déjà utilisé"
+      });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 12);
+
+    const { data: user, error } = await supabase
       .from("novatalk_users")
-      .select("id")
+      .insert({
+        full_name: fullName,
+        username,
+        password_hash: passwordHash
+      })
+      .select("id, full_name, username, created_at")
+      .single();
+
+    if (error) throw error;
+
+    await ensureProfile(user);
+    await ensureSettings(user.id);
+
+    const token = jwt.sign(
+      {
+        sub: user.id,
+        username: user.username
+      },
+      JWT_SECRET,
+      { expiresIn: "30d" }
+    );
+
+    return res.status(201).json({
+      success: true,
+      message: "Compte créé avec succès",
+      token,
+      user
+    });
+
+  } catch (error) {
+    console.error("REGISTER:", error);
+
+    return res.status(500).json({
+      success: false,
+      error: "Impossible de créer le compte"
+    });
+  }
+}
+
+app.post("/api/auth/register", registerUser);
+app.post("/api/register", registerUser);
+
+
+/* ================= CONNEXION ================= */
+
+async function loginUser(req, res) {
+  try {
+    const username = String(req.body.username || "")
+      .trim()
+      .toLowerCase();
+
+    const password = String(req.body.password || "");
+
+    if (!username || !password) {
+      return res.status(400).json({
+        success: false,
+        error: "Nom d'utilisateur et mot de passe obligatoires"
+      });
+    }
+
+    const { data: user, error } = await supabase
+      .from("novatalk_users")
+      .select("*")
       .eq("username", username)
       .maybeSingle();
 
-  if (checkError) {
-    return dbError(res, checkError, 500);
-  }
+    if (error) throw error;
 
-  if (duplicate) {
-    return fail(
-      res,
-      409,
-      "Ce nom d'utilisateur est déjà utilisé."
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        error: "Identifiants incorrects"
+      });
+    }
+
+    const validPassword = await bcrypt.compare(
+      password,
+      user.password_hash
     );
-  }
 
-  const password_hash = await bcrypt.hash(
-    password,
-    12
-  );
+    if (!validPassword) {
+      return res.status(401).json({
+        success: false,
+        error: "Identifiants incorrects"
+      });
+    }
 
-  const { data: user, error } = await supabase
-    .from("novatalk_users")
-    .insert({
-      full_name,
-      username,
-      password_hash
-    })
-    .select("id, full_name, username, created_at")
-    .single();
+    const token = jwt.sign(
+      {
+        sub: user.id,
+        username: user.username
+      },
+      JWT_SECRET,
+      { expiresIn: "30d" }
+    );
 
-  if (error) {
-    return dbError(res, error);
-  }
+    delete user.password_hash;
 
-  try {
     await ensureProfile(user);
     await ensureSettings(user.id);
-  } catch (e) {
-    console.error(
-      "Initialisation profil/paramètres:",
-      e.message
-    );
-  }
 
-  return res.status(201).json({
-    success: true,
-    message: "Compte créé avec succès.",
-    token: makeToken(user),
-    user
-  });
+    return res.json({
+      success: true,
+      message: "Connexion réussie",
+      token,
+      user
+    });
+
+  } catch (error) {
+    console.error("LOGIN:", error);
+
+    return res.status(500).json({
+      success: false,
+      error: "Impossible de se connecter"
+    });
+  }
 }
 
-/* CONNEXION */
+app.post("/api/auth/login", loginUser);
+app.post("/api/login", loginUser);
 
-async function loginHandler(req, res) {
-  const username = cleanText(
-    req.body.username,
-    30
-  ).replace(/^@/, "").toLowerCase();
 
-  const password =
-    typeof req.body.password === "string"
-      ? req.body.password
-      : "";
+/* ================= UTILISATEUR CONNECTÉ ================= */
 
-  if (!username || !password) {
-    return fail(
-      res,
-      400,
-      "Entre ton nom d'utilisateur et ton mot de passe."
-    );
-  }
-
-  const { data: user, error } = await supabase
-    .from("novatalk_users")
-    .select("id, full_name, username, password_hash, created_at")
-    .eq("username", username)
-    .maybeSingle();
-
-  if (error) {
-    return dbError(res, error, 500);
-  }
-
-  if (
-    !user ||
-    !(await bcrypt.compare(password, user.password_hash))
-  ) {
-    return fail(
-      res,
-      401,
-      "Nom d'utilisateur ou mot de passe incorrect."
-    );
-  }
-
-  const safeUser = {
-    id: user.id,
-    full_name: user.full_name,
-    username: user.username,
-    created_at: user.created_at
-  };
-
+app.get("/api/auth/me", auth, async (req, res) => {
   try {
-    await ensureProfile(safeUser);
-    await ensureSettings(user.id);
-  } catch (e) {
-    console.error(
-      "Initialisation profil/paramètres:",
-      e.message
-    );
+    const user = await getUserById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: "Utilisateur introuvable"
+      });
+    }
+
+    delete user.password_hash;
+
+    const profile = await ensureProfile(user);
+
+    res.json({
+      success: true,
+      user,
+      profile
+    });
+
+  } catch (error) {
+    console.error("AUTH ME:", error);
+
+    res.status(500).json({
+      success: false,
+      error: "Impossible de récupérer le compte"
+    });
   }
+});
 
-  res.json({
-    success: true,
-    token: makeToken(safeUser),
-    user: safeUser
-  });
-}
 
-app.post(
-  "/api/auth/register",
-  asyncRoute(registerHandler)
-);
+/* ================= PROFIL PERSONNEL ================= */
 
-app.post(
-  "/api/register",
-  asyncRoute(registerHandler)
-);
+app.get("/api/profile", auth, async (req, res) => {
+  try {
+    const user = await getUserById(req.user.id);
 
-app.post(
-  "/api/auth/login",
-  asyncRoute(loginHandler)
-);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: "Utilisateur introuvable"
+      });
+    }
 
-app.post(
-  "/api/login",
-  asyncRoute(loginHandler)
-);
+    const profile = await ensureProfile(user);
 
-app.get("/api/auth/me", auth, asyncRoute(async (req, res) => {
-  const user = await getUserById(req.userId);
+    delete user.password_hash;
 
-  if (!user) {
-    return fail(res, 404, "Utilisateur introuvable.");
+    res.json({
+      success: true,
+      user,
+      profile
+    });
+
+  } catch (error) {
+    console.error("GET PROFILE:", error);
+
+    res.status(500).json({
+      success: false,
+      error: "Impossible de charger le profil"
+    });
   }
+});
 
-  res.json({
-    success: true,
-    user
-  });
-}));
 
-app.get("/api/profile", auth, asyncRoute(async (req, res) => {
-  const user = await getUserById(req.userId);
-  const profile = await ensureProfile(user);
+app.get("/api/profile/me", auth, async (req, res) => {
+  try {
+    const user = await getUserById(req.user.id);
 
-  res.json({
-    success: true,
-    user,
-    profile
-  });
-}));
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: "Utilisateur introuvable"
+      });
+    }
 
-app.post("/api/auth/logout", auth, (req, res) => {
-  res.json({
-    success: true,
-    message: "Déconnexion effectuée sur cet appareil."
-  });
-});/* =========================================================
-   PARTIE 2 — UTILISATEURS, AMIS ET MESSAGERIE
-   ========================================================= */
+    const profile = await ensureProfile(user);
+
+    res.json({
+      success: true,
+      profile
+    });
+
+  } catch (error) {
+    console.error("MY PROFILE:", error);
+
+    res.status(500).json({
+      success: false,
+      error: "Impossible de charger le profil"
+    });
+  }
+});
+
+
+/* ================= MODIFIER SON PROFIL ================= */
+
+app.put("/api/profile", auth, async (req, res) => {
+  try {
+    const allowedFields = [
+      "full_name",
+      "bio",
+      "avatar_url",
+      "cover_url",
+      "website",
+      "location"
+    ];
+
+    const updates = {};
+
+    for (const field of allowedFields) {
+      if (req.body[field] !== undefined) {
+        updates[field] = String(req.body[field] || "").trim();
+      }
+    }
+
+    if (
+      updates.full_name !== undefined &&
+      (updates.full_name.length < 2 ||
+       updates.full_name.length > 80)
+    ) {
+      return res.status(400).json({
+        success: false,
+        error: "Nom complet invalide"
+      });
+    }
+
+    if (updates.bio && updates.bio.length > 500) {
+      return res.status(400).json({
+        success: false,
+        error: "La biographie est trop longue"
+      });
+    }
+
+    updates.updated_at = new Date().toISOString();
+
+    const { data, error } = await supabase
+      .from("novatalk_profiles")
+      .upsert({
+        user_id: req.user.id,
+        ...updates
+      }, {
+        onConflict: "user_id"
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    if (updates.full_name !== undefined) {
+      const { error: userError } = await supabase
+        .from("novatalk_users")
+        .update({
+          full_name: updates.full_name
+        })
+        .eq("id", req.user.id);
+
+      if (userError) throw userError;
+    }
+
+    res.json({
+      success: true,
+      profile: data
+    });
+
+  } catch (error) {
+    console.error("UPDATE PROFILE:", error);
+
+    res.status(500).json({
+      success: false,
+      error: "Impossible de modifier le profil"
+    });
+  }
+});
+
+
+/* ================= PROFIL PUBLIC ================= */
+
+app.get("/api/profiles/:username", auth, async (req, res) => {
+  try {
+    const username = String(req.params.username)
+      .trim()
+      .toLowerCase();
+
+    const { data: user, error } = await supabase
+      .from("novatalk_users")
+      .select("id, full_name, username, created_at")
+      .eq("username", username)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: "Profil introuvable"
+      });
+    }
+
+    const profile = await ensureProfile(user);
+
+    const { count: postsCount, error: postsError } =
+      await supabase
+        .from("novatalk_posts")
+        .select("id", {
+          count: "exact",
+          head: true
+        })
+        .eq("user_id", user.id)
+        .is("deleted_at", null);
+
+    if (postsError) throw postsError;
+
+    res.json({
+      success: true,
+      user,
+      profile,
+      posts_count: postsCount || 0
+    });
+
+  } catch (error) {
+    console.error("PUBLIC PROFILE:", error);
+
+    res.status(500).json({
+      success: false,
+      error: "Impossible de charger ce profil"
+    });
+  }
+});
+
 
 /* ================= RECHERCHE UTILISATEURS ================= */
 
@@ -512,47 +764,20 @@ app.get("/api/users", auth, async (req, res) => {
     const q = String(req.query.q || "").trim();
 
     if (q.length < 2) {
-      return res.json({ success: true, users: [] });
+      return res.json({
+        success: true,
+        users: []
+      });
     }
 
     const { data, error } = await supabase
       .from("novatalk_users")
-      .select("id, full_name, username, created_at")
-      .or(`username.ilike.%${q}%,full_name.ilike.%${q}%`)
+      .select("id, full_name, username")
+      .or(
+        `full_name.ilike.%${q}%,username.ilike.%${q}%`
+      )
       .neq("id", req.user.id)
-      .limit(20);
-
-    if (error) throw error;
-
-    const users = data || [];
-
-    res.json({
-      success: true,
-      users
-    });
-  } catch (error) {
-    console.error("USER SEARCH:", error);
-    res.status(500).json({
-      success: false,
-      error: "Impossible de rechercher les utilisateurs"
-    });
-  }
-});
-
-app.get("/api/users/search", auth, async (req, res) => {
-  try {
-    const q = String(req.query.q || "").trim();
-
-    if (q.length < 2) {
-      return res.json({ success: true, users: [] });
-    }
-
-    const { data, error } = await supabase
-      .from("novatalk_users")
-      .select("id, full_name, username, created_at")
-      .or(`username.ilike.%${q}%,full_name.ilike.%${q}%`)
-      .neq("id", req.user.id)
-      .limit(20);
+      .limit(30);
 
     if (error) throw error;
 
@@ -560,45 +785,63 @@ app.get("/api/users/search", auth, async (req, res) => {
       success: true,
       users: data || []
     });
+
   } catch (error) {
-    console.error("USER SEARCH:", error);
+    console.error("USERS SEARCH:", error);
+
     res.status(500).json({
       success: false,
-      error: "Erreur pendant la recherche"
+      error: "Impossible de rechercher les utilisateurs"
     });
   }
 });
 
 
-/* ================= DEMANDES D'AMITIÉ ================= */
-
-app.get("/api/friend-requests", auth, async (req, res) => {
+app.get("/api/users/search", auth, async (req, res) => {
   try {
+    const q = String(req.query.q || "").trim();
+
+    if (q.length < 2) {
+      return res.json({
+        success: true,
+        users: []
+      });
+    }
+
     const { data, error } = await supabase
-      .from("novatalk_friend_requests")
-      .select("*")
-      .or(`sender_id.eq.${req.user.id},receiver_id.eq.${req.user.id}`)
-      .order("created_at", { ascending: false });
+      .from("novatalk_users")
+      .select("id, full_name, username")
+      .or(
+        `full_name.ilike.%${q}%,username.ilike.%${q}%`
+      )
+      .neq("id", req.user.id)
+      .limit(30);
 
     if (error) throw error;
 
     res.json({
       success: true,
-      requests: data || []
+      users: data || []
     });
+
   } catch (error) {
-    console.error("FRIEND REQUESTS:", error);
+    console.error("USER SEARCH:", error);
+
     res.status(500).json({
       success: false,
-      error: "Impossible de charger les demandes"
+      error: "Impossible de rechercher les utilisateurs"
     });
   }
 });
 
 
+/* ================= ENVOYER UNE DEMANDE D'AMI ================= */
+
 app.post("/api/friend-requests", auth, async (req, res) => {
   try {
-    const receiverId = String(req.body.receiver_id || "").trim();
+    const receiverId = String(
+      req.body.receiver_id || ""
+    ).trim();
 
     if (!receiverId || receiverId === req.user.id) {
       return res.status(400).json({
@@ -607,43 +850,43 @@ app.post("/api/friend-requests", auth, async (req, res) => {
       });
     }
 
-    const blocked = await isBlockedEitherWay(req.user.id, receiverId);
+    const target = await getUserById(receiverId);
 
-    if (blocked) {
-      return res.status(403).json({
+    if (!target) {
+      return res.status(404).json({
         success: false,
-        error: "Cette action n'est pas autorisée"
+        error: "Utilisateur introuvable"
       });
     }
 
-    const { data: existing, error: existingError } = await supabase
-      .from("novatalk_friend_requests")
-      .select("id, status")
-      .or(
-        `and(sender_id.eq.${req.user.id},receiver_id.eq.${receiverId}),and(sender_id.eq.${receiverId},receiver_id.eq.${req.user.id})`
-      )
-      .maybeSingle();
+    if (await isBlockedEitherWay(req.user.id, receiverId)) {
+      return res.status(403).json({
+        success: false,
+        error: "Action impossible"
+      });
+    }
 
-    if (existingError) throw existingError;
+    if (await areFriends(req.user.id, receiverId)) {
+      return res.status(409).json({
+        success: false,
+        error: "Vous êtes déjà amis"
+      });
+    }
+
+    const { data: existing, error: findError } =
+      await supabase
+        .from("novatalk_friend_requests")
+        .select("id, status")
+        .eq("sender_id", req.user.id)
+        .eq("receiver_id", receiverId)
+        .maybeSingle();
+
+    if (findError) throw findError;
 
     if (existing && existing.status === "pending") {
       return res.status(409).json({
         success: false,
-        error: "Une demande est déjà en attente"
-      });
-    }
-
-    const { data: friendship } = await supabase
-      .from("novatalk_friends")
-      .select("id")
-      .eq("user_id", req.user.id)
-      .eq("friend_id", receiverId)
-      .maybeSingle();
-
-    if (friendship) {
-      return res.status(409).json({
-        success: false,
-        error: "Vous êtes déjà amis"
+        error: "Demande déjà envoyée"
       });
     }
 
@@ -663,8 +906,8 @@ app.post("/api/friend-requests", auth, async (req, res) => {
       receiverId,
       req.user.id,
       "friend_request",
-      "Nouvelle demande d'amitié",
-      "Vous avez reçu une demande d'amitié",
+      "Demande d'amitié",
+      "Quelqu'un souhaite devenir ton ami",
       data.id,
       "friend_request"
     );
@@ -673,8 +916,10 @@ app.post("/api/friend-requests", auth, async (req, res) => {
       success: true,
       request: data
     });
+
   } catch (error) {
-    console.error("SEND FRIEND REQUEST:", error);
+    console.error("FRIEND REQUEST:", error);
+
     res.status(500).json({
       success: false,
       error: "Impossible d'envoyer la demande"
@@ -683,47 +928,84 @@ app.post("/api/friend-requests", auth, async (req, res) => {
 });
 
 
-app.post("/api/friend-requests/:id/respond", auth, async (req, res) => {
+/* ================= LISTE DES DEMANDES REÇUES ================= */
+
+app.get("/api/friend-requests", auth, async (req, res) => {
   try {
-    const requestId = req.params.id;
-    const action = String(req.body.action || "").toLowerCase();
-
-    if (!["accept", "reject"].includes(action)) {
-      return res.status(400).json({
-        success: false,
-        error: "Action invalide"
-      });
-    }
-
-    const { data: request, error: requestError } = await supabase
+    const { data, error } = await supabase
       .from("novatalk_friend_requests")
       .select("*")
-      .eq("id", requestId)
       .eq("receiver_id", req.user.id)
       .eq("status", "pending")
-      .single();
+      .order("created_at", { ascending: false });
 
-    if (requestError || !request) {
-      return res.status(404).json({
-        success: false,
-        error: "Demande introuvable"
-      });
-    }
+    if (error) throw error;
 
-    const newStatus = action === "accept" ? "accepted" : "rejected";
+    res.json({
+      success: true,
+      requests: data || []
+    });
 
-    const { error: updateError } = await supabase
-      .from("novatalk_friend_requests")
-      .update({ status: newStatus })
-      .eq("id", requestId);
+  } catch (error) {
+    console.error("GET FRIEND REQUESTS:", error);
 
-    if (updateError) throw updateError;
+    res.status(500).json({
+      success: false,
+      error: "Impossible de charger les demandes"
+    });
+  }
+});
 
-    if (action === "accept") {
-      const { error: friendError } = await supabase
-        .from("novatalk_friends")
-        .upsert(
-          [
+
+/* ================= ACCEPTER / REFUSER UNE DEMANDE ================= */
+
+app.post(
+  "/api/friend-requests/:id/respond",
+  auth,
+  async (req, res) => {
+    try {
+      const action = req.body.action;
+
+      if (!["accept", "reject"].includes(action)) {
+        return res.status(400).json({
+          success: false,
+          error: "Action invalide"
+        });
+      }
+
+      const { data: request, error: findError } =
+        await supabase
+          .from("novatalk_friend_requests")
+          .select("*")
+          .eq("id", req.params.id)
+          .eq("receiver_id", req.user.id)
+          .eq("status", "pending")
+          .maybeSingle();
+
+      if (findError) throw findError;
+
+      if (!request) {
+        return res.status(404).json({
+          success: false,
+          error: "Demande introuvable"
+        });
+      }
+
+      const newStatus = action === "accept"
+        ? "accepted"
+        : "rejected";
+
+      const { error: updateError } = await supabase
+        .from("novatalk_friend_requests")
+        .update({ status: newStatus })
+        .eq("id", request.id);
+
+      if (updateError) throw updateError;
+
+      if (action === "accept") {
+        const { error: friendError } = await supabase
+          .from("novatalk_friends")
+          .upsert([
             {
               user_id: req.user.id,
               friend_id: request.sender_id
@@ -732,35 +1014,38 @@ app.post("/api/friend-requests/:id/respond", auth, async (req, res) => {
               user_id: request.sender_id,
               friend_id: req.user.id
             }
-          ],
-          { onConflict: "user_id,friend_id" }
+          ], {
+            onConflict: "user_id,friend_id"
+          });
+
+        if (friendError) throw friendError;
+
+        await notify(
+          request.sender_id,
+          req.user.id,
+          "friend_accepted",
+          "Demande acceptée",
+          "Votre demande d'amitié a été acceptée",
+          request.id,
+          "friend_request"
         );
+      }
 
-      if (friendError) throw friendError;
+      res.json({
+        success: true,
+        status: newStatus
+      });
 
-      await notify(
-        request.sender_id,
-        req.user.id,
-        "friend_accepted",
-        "Demande acceptée",
-        "Votre demande d'amitié a été acceptée",
-        request.id,
-        "friend_request"
-      );
+    } catch (error) {
+      console.error("RESPOND FRIEND REQUEST:", error);
+
+      res.status(500).json({
+        success: false,
+        error: "Impossible de traiter la demande"
+      });
     }
-
-    res.json({
-      success: true,
-      status: newStatus
-    });
-  } catch (error) {
-    console.error("RESPOND FRIEND REQUEST:", error);
-    res.status(500).json({
-      success: false,
-      error: "Impossible de traiter cette demande"
-    });
   }
-});
+);
 
 
 /* ================= LISTE DES AMIS ================= */
@@ -769,8 +1054,9 @@ app.get("/api/friends", auth, async (req, res) => {
   try {
     const { data: relations, error } = await supabase
       .from("novatalk_friends")
-      .select("friend_id")
-      .eq("user_id", req.user.id);
+      .select("friend_id, created_at")
+      .eq("user_id", req.user.id)
+      .order("created_at", { ascending: false });
 
     if (error) throw error;
 
@@ -783,10 +1069,11 @@ app.get("/api/friends", auth, async (req, res) => {
       });
     }
 
-    const { data: users, error: usersError } = await supabase
-      .from("novatalk_users")
-      .select("id, full_name, username, created_at")
-      .in("id", ids);
+    const { data: users, error: usersError } =
+      await supabase
+        .from("novatalk_users")
+        .select("id, full_name, username")
+        .in("id", ids);
 
     if (usersError) throw usersError;
 
@@ -794,8 +1081,10 @@ app.get("/api/friends", auth, async (req, res) => {
       success: true,
       friends: users || []
     });
+
   } catch (error) {
     console.error("GET FRIENDS:", error);
+
     res.status(500).json({
       success: false,
       error: "Impossible de charger les amis"
@@ -803,6 +1092,8 @@ app.get("/api/friends", auth, async (req, res) => {
   }
 });
 
+
+/* ================= SUPPRIMER UN AMI ================= */
 
 app.delete("/api/friends/:userId", auth, async (req, res) => {
   try {
@@ -817,9 +1108,14 @@ app.delete("/api/friends/:userId", auth, async (req, res) => {
 
     if (error) throw error;
 
-    res.json({ success: true });
+    res.json({
+      success: true,
+      message: "Ami supprimé"
+    });
+
   } catch (error) {
     console.error("DELETE FRIEND:", error);
+
     res.status(500).json({
       success: false,
       error: "Impossible de supprimer cet ami"
@@ -828,49 +1124,12 @@ app.delete("/api/friends/:userId", auth, async (req, res) => {
 });
 
 
-/* ================= CONVERSATIONS ================= */
+/* ================= FIN PARTIE 2/4 ================= *//* =========================================================
+   PARTIE 3/4 — MESSAGERIE ET RÉSEAU SOCIAL
+   ========================================================= */
 
-app.get("/api/conversations", auth, async (req, res) => {
-  try {
-    const { data: memberships, error: memberError } = await supabase
-      .from("novatalk_conversation_members")
-      .select("conversation_id")
-      .eq("user_id", req.user.id);
 
-    if (memberError) throw memberError;
-
-    const conversationIds = (memberships || []).map(
-      item => item.conversation_id
-    );
-
-    if (!conversationIds.length) {
-      return res.json({
-        success: true,
-        conversations: []
-      });
-    }
-
-    const { data: conversations, error } = await supabase
-      .from("novatalk_conversations")
-      .select("*")
-      .in("id", conversationIds)
-      .order("created_at", { ascending: false });
-
-    if (error) throw error;
-
-    res.json({
-      success: true,
-      conversations: conversations || []
-    });
-  } catch (error) {
-    console.error("GET CONVERSATIONS:", error);
-    res.status(500).json({
-      success: false,
-      error: "Impossible de charger les conversations"
-    });
-  }
-});
-
+/* ================= CRÉER UNE CONVERSATION ================= */
 
 app.post("/api/conversations", auth, async (req, res) => {
   try {
@@ -879,26 +1138,11 @@ app.post("/api/conversations", auth, async (req, res) => {
     if (!otherUserId || otherUserId === req.user.id) {
       return res.status(400).json({
         success: false,
-        error: "Destinataire invalide"
+        error: "Utilisateur invalide"
       });
     }
 
-    const blocked = await isBlockedEitherWay(req.user.id, otherUserId);
-
-    if (blocked) {
-      return res.status(403).json({
-        success: false,
-        error: "Vous ne pouvez pas démarrer cette conversation"
-      });
-    }
-
-    const { data: otherUser, error: userError } = await supabase
-      .from("novatalk_users")
-      .select("id")
-      .eq("id", otherUserId)
-      .maybeSingle();
-
-    if (userError) throw userError;
+    const otherUser = await getUserById(otherUserId);
 
     if (!otherUser) {
       return res.status(404).json({
@@ -907,44 +1151,63 @@ app.post("/api/conversations", auth, async (req, res) => {
       });
     }
 
-    const { data: myMemberships, error: myError } = await supabase
-      .from("novatalk_conversation_members")
-      .select("conversation_id")
-      .eq("user_id", req.user.id);
+    if (await isBlockedEitherWay(req.user.id, otherUserId)) {
+      return res.status(403).json({
+        success: false,
+        error: "Conversation non autorisée"
+      });
+    }
 
-    if (myError) throw myError;
-
-    const myIds = (myMemberships || []).map(
-      item => item.conversation_id
-    );
-
-    if (myIds.length) {
-      const { data: otherMemberships, error: otherError } = await supabase
+    const { data: existingMembers, error: membersError } =
+      await supabase
         .from("novatalk_conversation_members")
         .select("conversation_id")
+        .eq("user_id", req.user.id);
+
+    if (membersError) throw membersError;
+
+    for (const member of existingMembers || []) {
+      const { data: otherMember, error } = await supabase
+        .from("novatalk_conversation_members")
+        .select("conversation_id")
+        .eq("conversation_id", member.conversation_id)
         .eq("user_id", otherUserId)
-        .in("conversation_id", myIds);
+        .maybeSingle();
 
-      if (otherError) throw otherError;
+      if (error) throw error;
 
-      if (otherMemberships && otherMemberships.length) {
-        return res.json({
-          success: true,
-          conversation_id: otherMemberships[0].conversation_id,
-          existing: true
-        });
+      if (otherMember) {
+        const { data: conversation } = await supabase
+          .from("novatalk_conversations")
+          .select("*")
+          .eq("id", member.conversation_id)
+          .eq("is_group", false)
+          .maybeSingle();
+
+        if (conversation) {
+          return res.json({
+            success: true,
+            conversation: {
+              ...conversation,
+              conversation_id: conversation.id
+            }
+          });
+        }
       }
     }
 
-    const { data: conversation, error: conversationError } = await supabase
+    const { data: conversation, error } = await supabase
       .from("novatalk_conversations")
-      .insert({})
+      .insert({
+        created_by: req.user.id,
+        is_group: false
+      })
       .select()
       .single();
 
-    if (conversationError) throw conversationError;
+    if (error) throw error;
 
-    const { error: membershipError } = await supabase
+    const { error: insertError } = await supabase
       .from("novatalk_conversation_members")
       .insert([
         {
@@ -957,16 +1220,19 @@ app.post("/api/conversations", auth, async (req, res) => {
         }
       ]);
 
-    if (membershipError) throw membershipError;
+    if (insertError) throw insertError;
 
     res.status(201).json({
       success: true,
-      conversation_id: conversation.id,
-      conversation,
-      existing: false
+      conversation: {
+        ...conversation,
+        conversation_id: conversation.id
+      }
     });
+
   } catch (error) {
     console.error("CREATE CONVERSATION:", error);
+
     res.status(500).json({
       success: false,
       error: "Impossible de créer la conversation"
@@ -975,9 +1241,56 @@ app.post("/api/conversations", auth, async (req, res) => {
 });
 
 
-/* ================= VÉRIFICATION MEMBRE ================= */
+/* ================= LISTE DES CONVERSATIONS ================= */
 
-async function isConversationMember(conversationId, userId) {
+app.get("/api/conversations", auth, async (req, res) => {
+  try {
+    const { data: memberships, error } = await supabase
+      .from("novatalk_conversation_members")
+      .select("conversation_id")
+      .eq("user_id", req.user.id);
+
+    if (error) throw error;
+
+    const ids = (memberships || []).map(item => item.conversation_id);
+
+    if (!ids.length) {
+      return res.json({
+        success: true,
+        conversations: []
+      });
+    }
+
+    const { data, error: conversationError } = await supabase
+      .from("novatalk_conversations")
+      .select("*")
+      .in("id", ids)
+      .order("created_at", { ascending: false });
+
+    if (conversationError) throw conversationError;
+
+    res.json({
+      success: true,
+      conversations: (data || []).map(item => ({
+        ...item,
+        conversation_id: item.id
+      }))
+    });
+
+  } catch (error) {
+    console.error("GET CONVERSATIONS:", error);
+
+    res.status(500).json({
+      success: false,
+      error: "Impossible de charger les conversations"
+    });
+  }
+});
+
+
+/* ================= VÉRIFIER L'ACCÈS À UNE CONVERSATION ================= */
+
+async function checkConversationAccess(conversationId, userId) {
   const { data, error } = await supabase
     .from("novatalk_conversation_members")
     .select("id")
@@ -997,7 +1310,7 @@ app.get("/api/conversations/:id/messages", auth, async (req, res) => {
   try {
     const conversationId = req.params.id;
 
-    const allowed = await isConversationMember(
+    const allowed = await checkConversationAccess(
       conversationId,
       req.user.id
     );
@@ -1005,7 +1318,7 @@ app.get("/api/conversations/:id/messages", auth, async (req, res) => {
     if (!allowed) {
       return res.status(403).json({
         success: false,
-        error: "Accès interdit à cette conversation"
+        error: "Accès refusé à cette conversation"
       });
     }
 
@@ -1013,7 +1326,6 @@ app.get("/api/conversations/:id/messages", auth, async (req, res) => {
       .from("novatalk_messages")
       .select("*")
       .eq("conversation_id", conversationId)
-      .is("deleted_at", null)
       .order("created_at", { ascending: true })
       .limit(200);
 
@@ -1023,8 +1335,10 @@ app.get("/api/conversations/:id/messages", auth, async (req, res) => {
       success: true,
       messages: data || []
     });
+
   } catch (error) {
     console.error("GET MESSAGES:", error);
+
     res.status(500).json({
       success: false,
       error: "Impossible de charger les messages"
@@ -1039,23 +1353,15 @@ app.post("/api/conversations/:id/messages", auth, async (req, res) => {
   try {
     const conversationId = req.params.id;
     const content = String(req.body.content || "").trim();
-    const replyTo = req.body.reply_to || null;
 
-    if (!content) {
+    if (!content || content.length > 10000) {
       return res.status(400).json({
         success: false,
-        error: "Le message est vide"
+        error: "Message invalide"
       });
     }
 
-    if (content.length > 10000) {
-      return res.status(400).json({
-        success: false,
-        error: "Message trop long"
-      });
-    }
-
-    const allowed = await isConversationMember(
+    const allowed = await checkConversationAccess(
       conversationId,
       req.user.id
     );
@@ -1063,106 +1369,58 @@ app.post("/api/conversations/:id/messages", auth, async (req, res) => {
     if (!allowed) {
       return res.status(403).json({
         success: false,
-        error: "Accès interdit"
+        error: "Accès refusé"
       });
     }
 
-    const { data: members, error: membersError } = await supabase
-      .from("novatalk_conversation_members")
-      .select("user_id")
-      .eq("conversation_id", conversationId);
-
-    if (membersError) throw membersError;
-
-    for (const member of members || []) {
-      if (member.user_id !== req.user.id) {
-        const blocked = await isBlockedEitherWay(
-          req.user.id,
-          member.user_id
-        );
-
-        if (blocked) {
-          return res.status(403).json({
-            success: false,
-            error: "Vous ne pouvez pas envoyer de message à cet utilisateur"
-          });
-        }
-      }
-    }
-
-    const messageData = {
-      conversation_id: conversationId,
-      sender_id: req.user.id,
-      content
-    };
-
-    if (replyTo) {
-      messageData.reply_to = replyTo;
-    }
-
-    const { data: message, error } = await supabase
+    const { data, error } = await supabase
       .from("novatalk_messages")
-      .insert(messageData)
+      .insert({
+        conversation_id: conversationId,
+        sender_id: req.user.id,
+        content,
+        message_type: "text"
+      })
       .select()
       .single();
 
     if (error) throw error;
 
-    for (const member of members || []) {
-      if (member.user_id !== req.user.id) {
-        await notify(
-          member.user_id,
-          req.user.id,
-          "new_message",
-          "Nouveau message",
-          "Vous avez reçu un nouveau message",
-          message.id,
-          "message"
-        );
-      }
-    }
+    const { error: updateError } = await supabase
+      .from("novatalk_conversations")
+      .update({
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", conversationId);
+
+    if (updateError) throw updateError;
 
     res.status(201).json({
       success: true,
-      message
+      message: data
     });
+
   } catch (error) {
     console.error("SEND MESSAGE:", error);
+
     res.status(500).json({
       success: false,
       error: "Impossible d'envoyer le message"
     });
   }
-});/* =========================================================
-   PARTIE 3 — PROFILS, ABONNEMENTS ET PUBLICATIONS
-   ========================================================= */
+});
 
 
 /* ================= MODIFIER UN MESSAGE ================= */
 
 app.patch("/api/messages/:id", auth, async (req, res) => {
   try {
-    const messageId = req.params.id;
     const content = String(req.body.content || "").trim();
 
     if (!content || content.length > 10000) {
       return res.status(400).json({
         success: false,
-        error: "Contenu invalide"
-      });
-    }
-
-    const { data: message, error: findError } = await supabase
-      .from("novatalk_messages")
-      .select("*")
-      .eq("id", messageId)
-      .eq("sender_id", req.user.id)
-      .single();
-
-    if (findError || !message) {
-      return res.status(404).json({
-        success: false,
-        error: "Message introuvable"
+        error: "Message invalide"
       });
     }
 
@@ -1170,20 +1428,30 @@ app.patch("/api/messages/:id", auth, async (req, res) => {
       .from("novatalk_messages")
       .update({
         content,
-        edited_at: new Date().toISOString()
+        updated_at: new Date().toISOString()
       })
-      .eq("id", messageId)
+      .eq("id", req.params.id)
+      .eq("sender_id", req.user.id)
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) throw error;
+
+    if (!data) {
+      return res.status(404).json({
+        success: false,
+        error: "Message introuvable"
+      });
+    }
 
     res.json({
       success: true,
       message: data
     });
+
   } catch (error) {
     console.error("EDIT MESSAGE:", error);
+
     res.status(500).json({
       success: false,
       error: "Impossible de modifier le message"
@@ -1196,422 +1464,33 @@ app.patch("/api/messages/:id", auth, async (req, res) => {
 
 app.delete("/api/messages/:id", auth, async (req, res) => {
   try {
-    const messageId = req.params.id;
-
-    const { data: message, error: findError } = await supabase
+    const { data, error } = await supabase
       .from("novatalk_messages")
-      .select("id, sender_id")
-      .eq("id", messageId)
-      .single();
+      .delete()
+      .eq("id", req.params.id)
+      .eq("sender_id", req.user.id)
+      .select("id")
+      .maybeSingle();
 
-    if (findError || !message) {
+    if (error) throw error;
+
+    if (!data) {
       return res.status(404).json({
         success: false,
         error: "Message introuvable"
       });
     }
 
-    if (message.sender_id !== req.user.id) {
-      return res.status(403).json({
-        success: false,
-        error: "Vous ne pouvez supprimer que vos messages"
-      });
-    }
+    res.json({
+      success: true
+    });
 
-    const { error } = await supabase
-      .from("novatalk_messages")
-      .update({
-        deleted_at: new Date().toISOString()
-      })
-      .eq("id", messageId);
-
-    if (error) throw error;
-
-    res.json({ success: true });
   } catch (error) {
     console.error("DELETE MESSAGE:", error);
+
     res.status(500).json({
       success: false,
       error: "Impossible de supprimer le message"
-    });
-  }
-});
-
-
-/* ================= MON PROFIL ================= */
-
-app.get("/api/profile/me", auth, async (req, res) => {
-  try {
-    const profile = await ensureProfile(req.user.id);
-
-    const { data: user, error } = await supabase
-      .from("novatalk_users")
-      .select("id, full_name, username, created_at")
-      .eq("id", req.user.id)
-      .single();
-
-    if (error) throw error;
-
-    res.json({
-      success: true,
-      user,
-      profile
-    });
-  } catch (error) {
-    console.error("MY PROFILE:", error);
-    res.status(500).json({
-      success: false,
-      error: "Impossible de charger votre profil"
-    });
-  }
-});
-
-
-/* ================= MODIFIER MON PROFIL ================= */
-
-app.put("/api/profile", auth, async (req, res) => {
-  try {
-    const allowedFields = [
-      "display_name",
-      "bio",
-      "avatar_url",
-      "cover_url",
-      "country",
-      "website",
-      "birth_date",
-      "gender"
-    ];
-
-    const updates = {};
-
-    for (const field of allowedFields) {
-      if (req.body[field] !== undefined) {
-        updates[field] = String(req.body[field] ?? "").trim();
-      }
-    }
-
-    if (updates.display_name && updates.display_name.length > 80) {
-      return res.status(400).json({
-        success: false,
-        error: "Le nom affiché est trop long"
-      });
-    }
-
-    if (updates.bio && updates.bio.length > 500) {
-      return res.status(400).json({
-        success: false,
-        error: "La biographie ne peut pas dépasser 500 caractères"
-      });
-    }
-
-    if (updates.website && !/^https?:\/\//i.test(updates.website)) {
-      return res.status(400).json({
-        success: false,
-        error: "Le site web doit commencer par http:// ou https://"
-      });
-    }
-
-    updates.updated_at = new Date().toISOString();
-
-    const { data, error } = await supabase
-      .from("novatalk_profiles")
-      .upsert({
-        user_id: req.user.id,
-        ...updates
-      }, {
-        onConflict: "user_id"
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    res.json({
-      success: true,
-      profile: data
-    });
-  } catch (error) {
-    console.error("UPDATE PROFILE:", error);
-    res.status(500).json({
-      success: false,
-      error: "Impossible de modifier votre profil"
-    });
-  }
-});
-
-
-/* ================= PROFIL PUBLIC ================= */
-
-app.get("/api/profiles/:username", auth, async (req, res) => {
-  try {
-    const username = String(req.params.username || "").trim();
-
-    const { data: user, error: userError } = await supabase
-      .from("novatalk_users")
-      .select("id, full_name, username, created_at")
-      .eq("username", username)
-      .maybeSingle();
-
-    if (userError) throw userError;
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        error: "Profil introuvable"
-      });
-    }
-
-    const { data: profile, error: profileError } = await supabase
-      .from("novatalk_profiles")
-      .select("*")
-      .eq("user_id", user.id)
-      .maybeSingle();
-
-    if (profileError) throw profileError;
-
-    const { count: followers } = await supabase
-      .from("novatalk_follows")
-      .select("*", { count: "exact", head: true })
-      .eq("following_id", user.id);
-
-    const { count: following } = await supabase
-      .from("novatalk_follows")
-      .select("*", { count: "exact", head: true })
-      .eq("follower_id", user.id);
-
-    const { count: posts } = await supabase
-      .from("novatalk_posts")
-      .select("*", { count: "exact", head: true })
-      .eq("author_id", user.id)
-      .is("deleted_at", null);
-
-    const { data: followRelation } = await supabase
-      .from("novatalk_follows")
-      .select("id")
-      .eq("follower_id", req.user.id)
-      .eq("following_id", user.id)
-      .maybeSingle();
-
-    res.json({
-      success: true,
-      user,
-      profile,
-      statistics: {
-        followers: followers || 0,
-        following: following || 0,
-        posts: posts || 0
-      },
-      is_following: Boolean(followRelation),
-      is_me: req.user.id === user.id
-    });
-  } catch (error) {
-    console.error("PUBLIC PROFILE:", error);
-    res.status(500).json({
-      success: false,
-      error: "Impossible de charger ce profil"
-    });
-  }
-});
-
-
-/* ================= S'ABONNER À UN UTILISATEUR ================= */
-
-app.post("/api/users/:id/follow", auth, async (req, res) => {
-  try {
-    const targetId = req.params.id;
-
-    if (targetId === req.user.id) {
-      return res.status(400).json({
-        success: false,
-        error: "Vous ne pouvez pas vous suivre vous-même"
-      });
-    }
-
-    const blocked = await isBlockedEitherWay(req.user.id, targetId);
-
-    if (blocked) {
-      return res.status(403).json({
-        success: false,
-        error: "Cette action n'est pas autorisée"
-      });
-    }
-
-    const { data: target, error: targetError } = await supabase
-      .from("novatalk_users")
-      .select("id")
-      .eq("id", targetId)
-      .maybeSingle();
-
-    if (targetError) throw targetError;
-
-    if (!target) {
-      return res.status(404).json({
-        success: false,
-        error: "Utilisateur introuvable"
-      });
-    }
-
-    const { data: targetSettings } = await supabase
-      .from("novatalk_user_settings")
-      .select("private_account")
-      .eq("user_id", targetId)
-      .maybeSingle();
-
-    if (targetSettings?.private_account) {
-      return res.status(403).json({
-        success: false,
-        error: "Ce compte est privé"
-      });
-    }
-
-    const { data, error } = await supabase
-      .from("novatalk_follows")
-      .upsert({
-        follower_id: req.user.id,
-        following_id: targetId
-      }, {
-        onConflict: "follower_id,following_id",
-        ignoreDuplicates: true
-      })
-      .select()
-      .maybeSingle();
-
-    if (error) throw error;
-
-    await notify(
-      targetId,
-      req.user.id,
-      "new_follower",
-      "Nouvel abonné",
-      "Une personne vient de s'abonner à votre profil",
-      req.user.id,
-      "profile"
-    );
-
-    res.json({
-      success: true,
-      following: true,
-      relation: data || null
-    });
-  } catch (error) {
-    console.error("FOLLOW USER:", error);
-    res.status(500).json({
-      success: false,
-      error: "Impossible de suivre cet utilisateur"
-    });
-  }
-});
-
-
-/* ================= SE DÉSABONNER ================= */
-
-app.delete("/api/users/:id/follow", auth, async (req, res) => {
-  try {
-    const targetId = req.params.id;
-
-    const { error } = await supabase
-      .from("novatalk_follows")
-      .delete()
-      .eq("follower_id", req.user.id)
-      .eq("following_id", targetId);
-
-    if (error) throw error;
-
-    res.json({
-      success: true,
-      following: false
-    });
-  } catch (error) {
-    console.error("UNFOLLOW USER:", error);
-    res.status(500).json({
-      success: false,
-      error: "Impossible de se désabonner"
-    });
-  }
-});
-
-
-/* ================= LISTE DES ABONNÉS ================= */
-
-app.get("/api/users/:id/followers", auth, async (req, res) => {
-  try {
-    const { data: relations, error } = await supabase
-      .from("novatalk_follows")
-      .select("follower_id, created_at")
-      .eq("following_id", req.params.id)
-      .order("created_at", { ascending: false })
-      .limit(200);
-
-    if (error) throw error;
-
-    const ids = (relations || []).map(item => item.follower_id);
-
-    if (!ids.length) {
-      return res.json({
-        success: true,
-        users: []
-      });
-    }
-
-    const { data: users, error: usersError } = await supabase
-      .from("novatalk_users")
-      .select("id, full_name, username")
-      .in("id", ids);
-
-    if (usersError) throw usersError;
-
-    res.json({
-      success: true,
-      users: users || []
-    });
-  } catch (error) {
-    console.error("GET FOLLOWERS:", error);
-    res.status(500).json({
-      success: false,
-      error: "Impossible de charger les abonnés"
-    });
-  }
-});
-
-
-/* ================= LISTE DES ABONNEMENTS ================= */
-
-app.get("/api/users/:id/following", auth, async (req, res) => {
-  try {
-    const { data: relations, error } = await supabase
-      .from("novatalk_follows")
-      .select("following_id, created_at")
-      .eq("follower_id", req.params.id)
-      .order("created_at", { ascending: false })
-      .limit(200);
-
-    if (error) throw error;
-
-    const ids = (relations || []).map(item => item.following_id);
-
-    if (!ids.length) {
-      return res.json({
-        success: true,
-        users: []
-      });
-    }
-
-    const { data: users, error: usersError } = await supabase
-      .from("novatalk_users")
-      .select("id, full_name, username")
-      .in("id", ids);
-
-    if (usersError) throw usersError;
-
-    res.json({
-      success: true,
-      users: users || []
-    });
-  } catch (error) {
-    console.error("GET FOLLOWING:", error);
-    res.status(500).json({
-      success: false,
-      error: "Impossible de charger les abonnements"
     });
   }
 });
@@ -1622,23 +1501,13 @@ app.get("/api/users/:id/following", auth, async (req, res) => {
 app.post("/api/posts", auth, async (req, res) => {
   try {
     const content = String(req.body.content || "").trim();
-    const postType = req.body.post_type || "post";
-    const visibility = req.body.visibility || "public";
-    const location = req.body.location
-      ? String(req.body.location).trim()
-      : null;
+    const mediaUrl = req.body.media_url || null;
+    const mediaType = req.body.media_type || null;
 
-    if (!["post", "reel"].includes(postType)) {
+    if (!content && !mediaUrl) {
       return res.status(400).json({
         success: false,
-        error: "Type de publication invalide"
-      });
-    }
-
-    if (!["public", "friends", "followers", "private"].includes(visibility)) {
-      return res.status(400).json({
-        success: false,
-        error: "Visibilité invalide"
+        error: "La publication est vide"
       });
     }
 
@@ -1649,72 +1518,27 @@ app.post("/api/posts", auth, async (req, res) => {
       });
     }
 
-    const media = Array.isArray(req.body.media) ? req.body.media : [];
-
-    if (media.length > 10) {
-      return res.status(400).json({
-        success: false,
-        error: "Maximum 10 médias par publication"
-      });
-    }
-
-    const { data: post, error } = await supabase
+    const { data, error } = await supabase
       .from("novatalk_posts")
       .insert({
-        author_id: req.user.id,
+        user_id: req.user.id,
         content,
-        post_type: postType,
-        visibility,
-        location
+        media_url: mediaUrl,
+        media_type: mediaType
       })
       .select()
       .single();
 
     if (error) throw error;
 
-    if (media.length) {
-      const mediaRows = media.map((item, index) => ({
-        post_id: post.id,
-        media_url: String(item.media_url || item.url || ""),
-        media_type: item.media_type === "video" ? "video" : "image",
-        thumbnail_url: item.thumbnail_url || null,
-        position: index
-      }));
-
-      if (mediaRows.some(item => !/^https?:\/\//i.test(item.media_url))) {
-        await supabase
-          .from("novatalk_posts")
-          .delete()
-          .eq("id", post.id);
-
-        return res.status(400).json({
-          success: false,
-          error: "Chaque média doit avoir une adresse URL valide"
-        });
-      }
-
-      const { error: mediaError } = await supabase
-        .from("novatalk_post_media")
-        .insert(mediaRows);
-
-      if (mediaError) throw mediaError;
-    }
-
-    const { data: postMedia } = await supabase
-      .from("novatalk_post_media")
-      .select("*")
-      .eq("post_id", post.id)
-      .order("position", { ascending: true });
-
     res.status(201).json({
       success: true,
-      post: {
-        ...post,
-        media: postMedia || []
-      }
+      post: data
     });
+
   } catch (error) {
     console.error("CREATE POST:", error);
+
     res.status(500).json({
       success: false,
       error: "Impossible de publier"
@@ -1727,147 +1551,26 @@ app.post("/api/posts", auth, async (req, res) => {
 
 app.get("/api/feed", auth, async (req, res) => {
   try {
-    const limit = Math.min(
-      Math.max(parseInt(req.query.limit, 10) || 20, 1),
-      50
-    );
-
-    const { data: followed, error: followError } = await supabase
-      .from("novatalk_follows")
-      .select("following_id")
-      .eq("follower_id", req.user.id);
-
-    if (followError) throw followError;
-
-    const followedIds = (followed || []).map(item => item.following_id);
-
-    const authorIds = [...new Set([req.user.id, ...followedIds])];
-
-    const { data: posts, error } = await supabase
+    const { data, error } = await supabase
       .from("novatalk_posts")
       .select("*")
-      .in("author_id", authorIds)
       .is("deleted_at", null)
       .order("created_at", { ascending: false })
-      .limit(limit);
+      .limit(50);
 
     if (error) throw error;
 
-    const visiblePosts = (posts || []).filter(post => {
-      if (post.author_id === req.user.id) return true;
-      if (post.visibility === "private") return false;
-      if (post.visibility === "followers") {
-        return followedIds.includes(post.author_id);
-      }
-      if (post.visibility === "friends") return false;
-      return true;
-    });
-
-    const postIds = visiblePosts.map(post => post.id);
-
-    let media = [];
-    let reactions = [];
-    let comments = [];
-
-    if (postIds.length) {
-      const mediaResult = await supabase
-        .from("novatalk_post_media")
-        .select("*")
-        .in("post_id", postIds)
-        .order("position", { ascending: true });
-
-      if (mediaResult.error) throw mediaResult.error;
-      media = mediaResult.data || [];
-
-      const reactionResult = await supabase
-        .from("novatalk_post_reactions")
-        .select("post_id, user_id, reaction_type")
-        .in("post_id", postIds);
-
-      if (reactionResult.error) throw reactionResult.error;
-      reactions = reactionResult.data || [];
-
-      const commentResult = await supabase
-        .from("novatalk_post_comments")
-        .select("id, post_id, author_id, content, created_at")
-        .in("post_id", postIds)
-        .is("deleted_at", null);
-
-      if (commentResult.error) throw commentResult.error;
-      comments = commentResult.data || [];
-    }
-
-    const result = visiblePosts.map(post => ({
-      ...post,
-      media: media.filter(item => item.post_id === post.id),
-      reactions: reactions.filter(item => item.post_id === post.id),
-      comments_count: comments.filter(item => item.post_id === post.id).length,
-      my_reaction: reactions.find(
-        item => item.post_id === post.id && item.user_id === req.user.id
-      )?.reaction_type || null
-    }));
-
     res.json({
       success: true,
-      posts: result
+      posts: data || []
     });
+
   } catch (error) {
     console.error("GET FEED:", error);
+
     res.status(500).json({
       success: false,
       error: "Impossible de charger le fil d'actualité"
-    });
-  }
-});
-
-
-/* ================= OBTENIR UNE PUBLICATION ================= */
-
-app.get("/api/posts/:id", auth, async (req, res) => {
-  try {
-    const { data: post, error } = await supabase
-      .from("novatalk_posts")
-      .select("*")
-      .eq("id", req.params.id)
-      .is("deleted_at", null)
-      .maybeSingle();
-
-    if (error) throw error;
-
-    if (!post) {
-      return res.status(404).json({
-        success: false,
-        error: "Publication introuvable"
-      });
-    }
-
-    if (post.author_id !== req.user.id && post.visibility === "private") {
-      return res.status(403).json({
-        success: false,
-        error: "Cette publication est privée"
-      });
-    }
-
-    const { data: media, error: mediaError } = await supabase
-      .from("novatalk_post_media")
-      .select("*")
-      .eq("post_id", post.id)
-      .order("position", { ascending: true });
-
-    if (mediaError) throw mediaError;
-
-    res.json({
-      success: true,
-      post: {
-        ...post,
-        media: media || []
-      }
-    });
-  } catch (error) {
-    console.error("GET POST:", error);
-    res.status(500).json({
-      success: false,
-      error: "Impossible de charger la publication"
     });
   }
 });
@@ -1877,13 +1580,12 @@ app.get("/api/posts/:id", auth, async (req, res) => {
 
 app.patch("/api/posts/:id", auth, async (req, res) => {
   try {
-    const postId = req.params.id;
     const content = String(req.body.content || "").trim();
 
-    if (content.length > 10000) {
+    if (!content || content.length > 10000) {
       return res.status(400).json({
         success: false,
-        error: "Publication trop longue"
+        error: "Contenu invalide"
       });
     }
 
@@ -1891,11 +1593,10 @@ app.patch("/api/posts/:id", auth, async (req, res) => {
       .from("novatalk_posts")
       .update({
         content,
-        edited_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
-      .eq("id", postId)
-      .eq("author_id", req.user.id)
+      .eq("id", req.params.id)
+      .eq("user_id", req.user.id)
       .is("deleted_at", null)
       .select()
       .maybeSingle();
@@ -1905,7 +1606,7 @@ app.patch("/api/posts/:id", auth, async (req, res) => {
     if (!data) {
       return res.status(404).json({
         success: false,
-        error: "Publication introuvable ou accès refusé"
+        error: "Publication introuvable"
       });
     }
 
@@ -1913,8 +1614,10 @@ app.patch("/api/posts/:id", auth, async (req, res) => {
       success: true,
       post: data
     });
+
   } catch (error) {
-    console.error("EDIT POST:", error);
+    console.error("UPDATE POST:", error);
+
     res.status(500).json({
       success: false,
       error: "Impossible de modifier la publication"
@@ -1933,9 +1636,9 @@ app.delete("/api/posts/:id", auth, async (req, res) => {
         deleted_at: new Date().toISOString()
       })
       .eq("id", req.params.id)
-      .eq("author_id", req.user.id)
+      .eq("user_id", req.user.id)
       .is("deleted_at", null)
-      .select("id")
+      .select()
       .maybeSingle();
 
     if (error) throw error;
@@ -1943,43 +1646,45 @@ app.delete("/api/posts/:id", auth, async (req, res) => {
     if (!data) {
       return res.status(404).json({
         success: false,
-        error: "Publication introuvable ou accès refusé"
+        error: "Publication introuvable"
       });
     }
 
-    res.json({ success: true });
+    res.json({
+      success: true
+    });
+
   } catch (error) {
     console.error("DELETE POST:", error);
+
     res.status(500).json({
       success: false,
       error: "Impossible de supprimer la publication"
     });
   }
-});/* =========================================================
-   PARTIE 4 — COMMENTAIRES, RÉACTIONS, STORIES ET COLLECTIONS
-   ========================================================= */
+});
 
 
 /* ================= COMMENTAIRES ================= */
 
 app.get("/api/posts/:id/comments", auth, async (req, res) => {
   try {
-    const { data: comments, error } = await supabase
-      .from("novatalk_post_comments")
+    const { data, error } = await supabase
+      .from("novatalk_comments")
       .select("*")
       .eq("post_id", req.params.id)
-      .is("deleted_at", null)
-      .order("created_at", { ascending: true })
-      .limit(200);
+      .order("created_at", { ascending: true });
 
     if (error) throw error;
 
     res.json({
       success: true,
-      comments: comments || []
+      comments: data || []
     });
+
   } catch (error) {
     console.error("GET COMMENTS:", error);
+
     res.status(500).json({
       success: false,
       error: "Impossible de charger les commentaires"
@@ -1990,9 +1695,7 @@ app.get("/api/posts/:id/comments", auth, async (req, res) => {
 
 app.post("/api/posts/:id/comments", auth, async (req, res) => {
   try {
-    const postId = req.params.id;
     const content = String(req.body.content || "").trim();
-    const parentId = req.body.parent_id || null;
 
     if (!content || content.length > 3000) {
       return res.status(400).json({
@@ -2003,8 +1706,8 @@ app.post("/api/posts/:id/comments", auth, async (req, res) => {
 
     const { data: post, error: postError } = await supabase
       .from("novatalk_posts")
-      .select("id, author_id")
-      .eq("id", postId)
+      .select("id,user_id")
+      .eq("id", req.params.id)
       .is("deleted_at", null)
       .maybeSingle();
 
@@ -2017,46 +1720,26 @@ app.post("/api/posts/:id/comments", auth, async (req, res) => {
       });
     }
 
-    if (parentId) {
-      const { data: parent, error: parentError } = await supabase
-        .from("novatalk_post_comments")
-        .select("id, post_id")
-        .eq("id", parentId)
-        .eq("post_id", postId)
-        .is("deleted_at", null)
-        .maybeSingle();
-
-      if (parentError) throw parentError;
-
-      if (!parent) {
-        return res.status(404).json({
-          success: false,
-          error: "Commentaire parent introuvable"
-        });
-      }
-    }
-
     const { data, error } = await supabase
-      .from("novatalk_post_comments")
+      .from("novatalk_comments")
       .insert({
-        post_id: postId,
-        author_id: req.user.id,
-        content,
-        parent_id: parentId
+        post_id: post.id,
+        user_id: req.user.id,
+        content
       })
       .select()
       .single();
 
     if (error) throw error;
 
-    if (post.author_id !== req.user.id) {
+    if (post.user_id !== req.user.id) {
       await notify(
-        post.author_id,
+        post.user_id,
         req.user.id,
-        "post_comment",
+        "comment",
         "Nouveau commentaire",
-        "Quelqu'un a commenté votre publication",
-        postId,
+        "Quelqu'un a commenté ta publication",
+        post.id,
         "post"
       );
     }
@@ -2065,8 +1748,10 @@ app.post("/api/posts/:id/comments", auth, async (req, res) => {
       success: true,
       comment: data
     });
+
   } catch (error) {
     console.error("CREATE COMMENT:", error);
+
     res.status(500).json({
       success: false,
       error: "Impossible d'ajouter le commentaire"
@@ -2089,14 +1774,13 @@ app.patch("/api/comments/:id", auth, async (req, res) => {
     }
 
     const { data, error } = await supabase
-      .from("novatalk_post_comments")
+      .from("novatalk_comments")
       .update({
         content,
-        edited_at: new Date().toISOString()
+        updated_at: new Date().toISOString()
       })
       .eq("id", req.params.id)
-      .eq("author_id", req.user.id)
-      .is("deleted_at", null)
+      .eq("user_id", req.user.id)
       .select()
       .maybeSingle();
 
@@ -2113,8 +1797,10 @@ app.patch("/api/comments/:id", auth, async (req, res) => {
       success: true,
       comment: data
     });
+
   } catch (error) {
     console.error("EDIT COMMENT:", error);
+
     res.status(500).json({
       success: false,
       error: "Impossible de modifier le commentaire"
@@ -2128,13 +1814,10 @@ app.patch("/api/comments/:id", auth, async (req, res) => {
 app.delete("/api/comments/:id", auth, async (req, res) => {
   try {
     const { data, error } = await supabase
-      .from("novatalk_post_comments")
-      .update({
-        deleted_at: new Date().toISOString()
-      })
+      .from("novatalk_comments")
+      .delete()
       .eq("id", req.params.id)
-      .eq("author_id", req.user.id)
-      .is("deleted_at", null)
+      .eq("user_id", req.user.id)
       .select("id")
       .maybeSingle();
 
@@ -2147,9 +1830,13 @@ app.delete("/api/comments/:id", auth, async (req, res) => {
       });
     }
 
-    res.json({ success: true });
+    res.json({
+      success: true
+    });
+
   } catch (error) {
     console.error("DELETE COMMENT:", error);
+
     res.status(500).json({
       success: false,
       error: "Impossible de supprimer le commentaire"
@@ -2158,12 +1845,13 @@ app.delete("/api/comments/:id", auth, async (req, res) => {
 });
 
 
-/* ================= RÉACTIONS AUX PUBLICATIONS ================= */
+/* ================= RÉACTIONS ================= */
 
 app.post("/api/posts/:id/reactions", auth, async (req, res) => {
   try {
-    const postId = req.params.id;
-    const allowedReactions = [
+    const reaction = String(req.body.reaction || "like");
+
+    const allowed = [
       "like",
       "love",
       "haha",
@@ -2172,9 +1860,7 @@ app.post("/api/posts/:id/reactions", auth, async (req, res) => {
       "angry"
     ];
 
-    const reactionType = String(req.body.reaction_type || "like");
-
-    if (!allowedReactions.includes(reactionType)) {
+    if (!allowed.includes(reaction)) {
       return res.status(400).json({
         success: false,
         error: "Réaction invalide"
@@ -2183,8 +1869,8 @@ app.post("/api/posts/:id/reactions", auth, async (req, res) => {
 
     const { data: post, error: postError } = await supabase
       .from("novatalk_posts")
-      .select("id, author_id")
-      .eq("id", postId)
+      .select("id,user_id")
+      .eq("id", req.params.id)
       .is("deleted_at", null)
       .maybeSingle();
 
@@ -2198,27 +1884,27 @@ app.post("/api/posts/:id/reactions", auth, async (req, res) => {
     }
 
     const { data, error } = await supabase
-      .from("novatalk_post_reactions")
+      .from("novatalk_reactions")
       .upsert({
-        post_id: postId,
         user_id: req.user.id,
-        reaction_type: reactionType
+        post_id: post.id,
+        reaction
       }, {
-        onConflict: "post_id,user_id"
+        onConflict: "user_id,post_id"
       })
       .select()
       .single();
 
     if (error) throw error;
 
-    if (post.author_id !== req.user.id) {
+    if (post.user_id !== req.user.id) {
       await notify(
-        post.author_id,
+        post.user_id,
         req.user.id,
-        "post_reaction",
+        "reaction",
         "Nouvelle réaction",
-        "Quelqu'un a réagi à votre publication",
-        postId,
+        "Quelqu'un a réagi à ta publication",
+        post.id,
         "post"
       );
     }
@@ -2227,29 +1913,37 @@ app.post("/api/posts/:id/reactions", auth, async (req, res) => {
       success: true,
       reaction: data
     });
+
   } catch (error) {
     console.error("POST REACTION:", error);
+
     res.status(500).json({
       success: false,
-      error: "Impossible d'ajouter la réaction"
+      error: "Impossible d'enregistrer la réaction"
     });
   }
 });
 
 
+/* ================= RETIRER UNE RÉACTION ================= */
+
 app.delete("/api/posts/:id/reactions", auth, async (req, res) => {
   try {
     const { error } = await supabase
-      .from("novatalk_post_reactions")
+      .from("novatalk_reactions")
       .delete()
-      .eq("post_id", req.params.id)
-      .eq("user_id", req.user.id);
+      .eq("user_id", req.user.id)
+      .eq("post_id", req.params.id);
 
     if (error) throw error;
 
-    res.json({ success: true });
+    res.json({
+      success: true
+    });
+
   } catch (error) {
     console.error("DELETE REACTION:", error);
+
     res.status(500).json({
       success: false,
       error: "Impossible de retirer la réaction"
@@ -2262,19 +1956,16 @@ app.delete("/api/posts/:id/reactions", auth, async (req, res) => {
 
 app.post("/api/posts/:id/share", auth, async (req, res) => {
   try {
-    const postId = req.params.id;
-    const message = String(req.body.message || "").trim();
-
-    const { data: post, error: postError } = await supabase
+    const { data: original, error: originalError } = await supabase
       .from("novatalk_posts")
-      .select("id, author_id")
-      .eq("id", postId)
+      .select("*")
+      .eq("id", req.params.id)
       .is("deleted_at", null)
       .maybeSingle();
 
-    if (postError) throw postError;
+    if (originalError) throw originalError;
 
-    if (!post) {
+    if (!original) {
       return res.status(404).json({
         success: false,
         error: "Publication introuvable"
@@ -2282,33 +1973,25 @@ app.post("/api/posts/:id/share", auth, async (req, res) => {
     }
 
     const { data, error } = await supabase
-      .from("novatalk_post_shares")
+      .from("novatalk_posts")
       .insert({
-        post_id: postId,
         user_id: req.user.id,
-        message
+        content: String(req.body.content || ""),
+        shared_post_id: original.id
       })
       .select()
       .single();
 
     if (error) throw error;
 
-    await notify(
-      post.author_id,
-      req.user.id,
-      "post_shared",
-      "Publication partagée",
-      "Quelqu'un a partagé votre publication",
-      postId,
-      "post"
-    );
-
     res.status(201).json({
       success: true,
-      share: data
+      post: data
     });
+
   } catch (error) {
     console.error("SHARE POST:", error);
+
     res.status(500).json({
       success: false,
       error: "Impossible de partager la publication"
@@ -2317,81 +2000,212 @@ app.post("/api/posts/:id/share", auth, async (req, res) => {
 });
 
 
-/* ================= STORIES ================= */
+/* ================= SUIVRE UN UTILISATEUR ================= */
 
-app.get("/api/stories", auth, async (req, res) => {
+app.post("/api/users/:id/follow", auth, async (req, res) => {
   try {
-    const { data: followed, error: followError } = await supabase
-      .from("novatalk_follows")
-      .select("following_id")
-      .eq("follower_id", req.user.id);
+    const targetId = req.params.id;
 
-    if (followError) throw followError;
+    if (targetId === req.user.id) {
+      return res.status(400).json({
+        success: false,
+        error: "Tu ne peux pas te suivre toi-même"
+      });
+    }
 
-    const ids = [
-      req.user.id,
-      ...(followed || []).map(item => item.following_id)
-    ];
+    const target = await getUserById(targetId);
+
+    if (!target) {
+      return res.status(404).json({
+        success: false,
+        error: "Utilisateur introuvable"
+      });
+    }
+
+    if (await isBlockedEitherWay(req.user.id, targetId)) {
+      return res.status(403).json({
+        success: false,
+        error: "Action impossible"
+      });
+    }
 
     const { data, error } = await supabase
-      .from("novatalk_stories")
-      .select("*")
-      .in("user_id", ids)
-      .gt("expires_at", new Date().toISOString())
-      .order("created_at", { ascending: false });
+      .from("novatalk_follows")
+      .upsert({
+        follower_id: req.user.id,
+        following_id: targetId
+      }, {
+        onConflict: "follower_id,following_id"
+      })
+      .select()
+      .single();
 
     if (error) throw error;
 
+    await notify(
+      targetId,
+      req.user.id,
+      "follow",
+      "Nouvel abonné",
+      "Quelqu'un vient de te suivre",
+      data.id,
+      "follow"
+    );
+
     res.json({
       success: true,
-      stories: data || []
+      follow: data
     });
+
   } catch (error) {
-    console.error("GET STORIES:", error);
+    console.error("FOLLOW USER:", error);
+
     res.status(500).json({
       success: false,
-      error: "Impossible de charger les stories"
+      error: "Impossible de suivre cet utilisateur"
     });
   }
 });
 
 
+/* ================= NE PLUS SUIVRE ================= */
+
+app.delete("/api/users/:id/follow", auth, async (req, res) => {
+  try {
+    const { error } = await supabase
+      .from("novatalk_follows")
+      .delete()
+      .eq("follower_id", req.user.id)
+      .eq("following_id", req.params.id);
+
+    if (error) throw error;
+
+    res.json({
+      success: true
+    });
+
+  } catch (error) {
+    console.error("UNFOLLOW USER:", error);
+
+    res.status(500).json({
+      success: false,
+      error: "Impossible de ne plus suivre cet utilisateur"
+    });
+  }
+});
+
+
+/* ================= ABONNÉS ================= */
+
+app.get("/api/users/:id/followers", auth, async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from("novatalk_follows")
+      .select("follower_id, created_at")
+      .eq("following_id", req.params.id);
+
+    if (error) throw error;
+
+    const ids = (data || []).map(item => item.follower_id);
+
+    let users = [];
+
+    if (ids.length) {
+      const { data: userData, error: userError } = await supabase
+        .from("novatalk_users")
+        .select("id, full_name, username")
+        .in("id", ids);
+
+      if (userError) throw userError;
+
+      users = userData || [];
+    }
+
+    res.json({
+      success: true,
+      followers: users
+    });
+
+  } catch (error) {
+    console.error("GET FOLLOWERS:", error);
+
+    res.status(500).json({
+      success: false,
+      error: "Impossible de charger les abonnés"
+    });
+  }
+});
+
+
+/* ================= ABONNEMENTS ================= */
+
+app.get("/api/users/:id/following", auth, async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from("novatalk_follows")
+      .select("following_id, created_at")
+      .eq("follower_id", req.params.id);
+
+    if (error) throw error;
+
+    const ids = (data || []).map(item => item.following_id);
+
+    let users = [];
+
+    if (ids.length) {
+      const { data: userData, error: userError } = await supabase
+        .from("novatalk_users")
+        .select("id, full_name, username")
+        .in("id", ids);
+
+      if (userError) throw userError;
+
+      users = userData || [];
+    }
+
+    res.json({
+      success: true,
+      following: users
+    });
+
+  } catch (error) {
+    console.error("GET FOLLOWING:", error);
+
+    res.status(500).json({
+      success: false,
+      error: "Impossible de charger les abonnements"
+    });
+  }
+});
+
+
+/* ================= FIN PARTIE 3/4 ================= *//* =========================================================
+   PARTIE 4/4 — STORIES, COLLECTIONS, SÉCURITÉ ET GROUPES
+   NOVATALK V4 🌍
+   BY MARUCE SOLDADO 🇬🇳
+   ========================================================= */
+
+
+/* ================= STORIES ================= */
+
+// Créer une story
 app.post("/api/stories", auth, async (req, res) => {
   try {
     const mediaUrl = String(req.body.media_url || "").trim();
-    const mediaType = req.body.media_type || "image";
-    const textContent = String(req.body.text_content || "").trim();
-    const backgroundColor = String(
-      req.body.background_color || "#071b16"
-    );
+    const mediaType = String(req.body.media_type || "image");
+    const caption = String(req.body.caption || "").trim();
 
-    const visibility = req.body.visibility || "public";
-
-    if (!["image", "video", "text"].includes(mediaType)) {
+    if (!mediaUrl) {
       return res.status(400).json({
         success: false,
-        error: "Type de story invalide"
+        error: "Média obligatoire"
       });
     }
 
-    if (!["public", "friends", "followers"].includes(visibility)) {
+    if (!["image", "video"].includes(mediaType)) {
       return res.status(400).json({
         success: false,
-        error: "Visibilité invalide"
-      });
-    }
-
-    if (mediaType !== "text" && !/^https?:\/\//i.test(mediaUrl)) {
-      return res.status(400).json({
-        success: false,
-        error: "Adresse média invalide"
-      });
-    }
-
-    if (textContent.length > 1000) {
-      return res.status(400).json({
-        success: false,
-        error: "Texte trop long"
+        error: "Type de média invalide"
       });
     }
 
@@ -2399,11 +2213,12 @@ app.post("/api/stories", auth, async (req, res) => {
       .from("novatalk_stories")
       .insert({
         user_id: req.user.id,
-        media_url: mediaType === "text" ? null : mediaUrl,
+        media_url: mediaUrl,
         media_type: mediaType,
-        text_content: textContent,
-        background_color: backgroundColor,
-        visibility
+        caption,
+        expires_at: new Date(
+          Date.now() + 24 * 60 * 60 * 1000
+        ).toISOString()
       })
       .select()
       .single();
@@ -2414,26 +2229,53 @@ app.post("/api/stories", auth, async (req, res) => {
       success: true,
       story: data
     });
+
   } catch (error) {
     console.error("CREATE STORY:", error);
+
     res.status(500).json({
       success: false,
-      error: "Impossible de publier la story"
+      error: "Impossible de créer la story"
     });
   }
 });
 
 
-/* ================= VUES DES STORIES ================= */
+// Liste des stories actives
+app.get("/api/stories", auth, async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from("novatalk_stories")
+      .select("*")
+      .gt("expires_at", new Date().toISOString())
+      .order("created_at", { ascending: false })
+      .limit(100);
 
+    if (error) throw error;
+
+    res.json({
+      success: true,
+      stories: data || []
+    });
+
+  } catch (error) {
+    console.error("GET STORIES:", error);
+
+    res.status(500).json({
+      success: false,
+      error: "Impossible de charger les stories"
+    });
+  }
+});
+
+
+// Consulter une story
 app.post("/api/stories/:id/view", auth, async (req, res) => {
   try {
-    const storyId = req.params.id;
-
     const { data: story, error: storyError } = await supabase
       .from("novatalk_stories")
-      .select("id, user_id, expires_at")
-      .eq("id", storyId)
+      .select("id,user_id,expires_at")
+      .eq("id", req.params.id)
       .gt("expires_at", new Date().toISOString())
       .maybeSingle();
 
@@ -2446,31 +2288,27 @@ app.post("/api/stories/:id/view", auth, async (req, res) => {
       });
     }
 
-    if (story.user_id === req.user.id) {
-      return res.json({
-        success: true,
-        viewed: false
-      });
-    }
-
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("novatalk_story_views")
       .upsert({
-        story_id: storyId,
-        viewer_id: req.user.id
+        story_id: story.id,
+        user_id: req.user.id
       }, {
-        onConflict: "story_id,viewer_id",
-        ignoreDuplicates: true
-      });
+        onConflict: "story_id,user_id"
+      })
+      .select()
+      .single();
 
     if (error) throw error;
 
     res.json({
       success: true,
-      viewed: true
+      view: data
     });
+
   } catch (error) {
     console.error("STORY VIEW:", error);
+
     res.status(500).json({
       success: false,
       error: "Impossible d'enregistrer la vue"
@@ -2479,30 +2317,30 @@ app.post("/api/stories/:id/view", auth, async (req, res) => {
 });
 
 
-/* ================= LISTE DES VUES ================= */
-
+// Voir les consultations d'une story personnelle
 app.get("/api/stories/:id/views", auth, async (req, res) => {
   try {
     const { data: story, error: storyError } = await supabase
       .from("novatalk_stories")
-      .select("id, user_id")
+      .select("id")
       .eq("id", req.params.id)
+      .eq("user_id", req.user.id)
       .maybeSingle();
 
     if (storyError) throw storyError;
 
-    if (!story || story.user_id !== req.user.id) {
-      return res.status(403).json({
+    if (!story) {
+      return res.status(404).json({
         success: false,
-        error: "Accès interdit"
+        error: "Story introuvable"
       });
     }
 
     const { data, error } = await supabase
       .from("novatalk_story_views")
-      .select("viewer_id, viewed_at")
-      .eq("story_id", req.params.id)
-      .order("viewed_at", { ascending: false });
+      .select("*")
+      .eq("story_id", story.id)
+      .order("created_at", { ascending: false });
 
     if (error) throw error;
 
@@ -2510,18 +2348,19 @@ app.get("/api/stories/:id/views", auth, async (req, res) => {
       success: true,
       views: data || []
     });
+
   } catch (error) {
     console.error("STORY VIEWS:", error);
+
     res.status(500).json({
       success: false,
-      error: "Impossible de charger les vues"
+      error: "Impossible de charger les consultations"
     });
   }
 });
 
 
-/* ================= SUPPRIMER UNE STORY ================= */
-
+// Supprimer une story personnelle
 app.delete("/api/stories/:id", auth, async (req, res) => {
   try {
     const { data, error } = await supabase
@@ -2542,8 +2381,10 @@ app.delete("/api/stories/:id", auth, async (req, res) => {
     }
 
     res.json({ success: true });
+
   } catch (error) {
     console.error("DELETE STORY:", error);
+
     res.status(500).json({
       success: false,
       error: "Impossible de supprimer la story"
@@ -2554,6 +2395,7 @@ app.delete("/api/stories/:id", auth, async (req, res) => {
 
 /* ================= COLLECTIONS ================= */
 
+// Liste des collections
 app.get("/api/collections", auth, async (req, res) => {
   try {
     const { data, error } = await supabase
@@ -2568,8 +2410,10 @@ app.get("/api/collections", auth, async (req, res) => {
       success: true,
       collections: data || []
     });
+
   } catch (error) {
     console.error("GET COLLECTIONS:", error);
+
     res.status(500).json({
       success: false,
       error: "Impossible de charger les collections"
@@ -2578,13 +2422,12 @@ app.get("/api/collections", auth, async (req, res) => {
 });
 
 
+// Créer une collection
 app.post("/api/collections", auth, async (req, res) => {
   try {
     const name = String(req.body.name || "").trim();
-    const coverUrl = req.body.cover_url || null;
-    const isPrivate = req.body.is_private !== false;
 
-    if (!name || name.length > 80) {
+    if (name.length < 2 || name.length > 80) {
       return res.status(400).json({
         success: false,
         error: "Nom de collection invalide"
@@ -2595,9 +2438,7 @@ app.post("/api/collections", auth, async (req, res) => {
       .from("novatalk_collections")
       .insert({
         user_id: req.user.id,
-        name,
-        cover_url: coverUrl,
-        is_private: isPrivate
+        name
       })
       .select()
       .single();
@@ -2608,8 +2449,10 @@ app.post("/api/collections", auth, async (req, res) => {
       success: true,
       collection: data
     });
+
   } catch (error) {
     console.error("CREATE COLLECTION:", error);
+
     res.status(500).json({
       success: false,
       error: "Impossible de créer la collection"
@@ -2618,8 +2461,7 @@ app.post("/api/collections", auth, async (req, res) => {
 });
 
 
-/* ================= SUPPRIMER UNE COLLECTION ================= */
-
+// Supprimer une collection
 app.delete("/api/collections/:id", auth, async (req, res) => {
   try {
     const { data, error } = await supabase
@@ -2640,8 +2482,10 @@ app.delete("/api/collections/:id", auth, async (req, res) => {
     }
 
     res.json({ success: true });
+
   } catch (error) {
     console.error("DELETE COLLECTION:", error);
+
     res.status(500).json({
       success: false,
       error: "Impossible de supprimer la collection"
@@ -2666,8 +2510,10 @@ app.get("/api/saved-posts", auth, async (req, res) => {
       success: true,
       saved_posts: data || []
     });
+
   } catch (error) {
     console.error("GET SAVED POSTS:", error);
+
     res.status(500).json({
       success: false,
       error: "Impossible de charger les publications enregistrées"
@@ -2676,17 +2522,15 @@ app.get("/api/saved-posts", auth, async (req, res) => {
 });
 
 
-/* ================= ENREGISTRER UNE PUBLICATION ================= */
-
+// Enregistrer une publication
 app.post("/api/posts/:id/save", auth, async (req, res) => {
   try {
-    const postId = req.params.id;
     const collectionId = req.body.collection_id || null;
 
     const { data: post, error: postError } = await supabase
       .from("novatalk_posts")
       .select("id")
-      .eq("id", postId)
+      .eq("id", req.params.id)
       .is("deleted_at", null)
       .maybeSingle();
 
@@ -2700,14 +2544,14 @@ app.post("/api/posts/:id/save", auth, async (req, res) => {
     }
 
     if (collectionId) {
-      const { data: collection, error: collectionError } = await supabase
+      const { data: collection, error } = await supabase
         .from("novatalk_collections")
         .select("id")
         .eq("id", collectionId)
         .eq("user_id", req.user.id)
         .maybeSingle();
 
-      if (collectionError) throw collectionError;
+      if (error) throw error;
 
       if (!collection) {
         return res.status(404).json({
@@ -2721,7 +2565,7 @@ app.post("/api/posts/:id/save", auth, async (req, res) => {
       .from("novatalk_saved_posts")
       .upsert({
         user_id: req.user.id,
-        post_id: postId,
+        post_id: post.id,
         collection_id: collectionId
       }, {
         onConflict: "user_id,post_id"
@@ -2735,8 +2579,10 @@ app.post("/api/posts/:id/save", auth, async (req, res) => {
       success: true,
       saved_post: data
     });
+
   } catch (error) {
     console.error("SAVE POST:", error);
+
     res.status(500).json({
       success: false,
       error: "Impossible d'enregistrer la publication"
@@ -2745,8 +2591,7 @@ app.post("/api/posts/:id/save", auth, async (req, res) => {
 });
 
 
-/* ================= RETIRER UNE PUBLICATION ENREGISTRÉE ================= */
-
+// Retirer une publication enregistrée
 app.delete("/api/posts/:id/save", auth, async (req, res) => {
   try {
     const { error } = await supabase
@@ -2758,16 +2603,16 @@ app.delete("/api/posts/:id/save", auth, async (req, res) => {
     if (error) throw error;
 
     res.json({ success: true });
+
   } catch (error) {
     console.error("UNSAVE POST:", error);
+
     res.status(500).json({
       success: false,
       error: "Impossible de retirer la publication"
     });
   }
-});/* =========================================================
-   PARTIE 5 — NOTIFICATIONS, PARAMÈTRES ET SÉCURITÉ
-   ========================================================= */
+});
 
 
 /* ================= NOTIFICATIONS ================= */
@@ -2783,15 +2628,17 @@ app.get("/api/notifications", auth, async (req, res) => {
 
     if (error) throw error;
 
-    const unread = (data || []).filter(item => !item.is_read).length;
+    const notifications = data || [];
 
     res.json({
       success: true,
-      notifications: data || [],
-      unread_count: unread
+      notifications,
+      unread_count: notifications.filter(item => !item.is_read).length
     });
+
   } catch (error) {
     console.error("GET NOTIFICATIONS:", error);
+
     res.status(500).json({
       success: false,
       error: "Impossible de charger les notifications"
@@ -2800,8 +2647,7 @@ app.get("/api/notifications", auth, async (req, res) => {
 });
 
 
-/* ================= MARQUER UNE NOTIFICATION COMME LUE ================= */
-
+// Marquer une notification comme lue
 app.patch("/api/notifications/:id/read", auth, async (req, res) => {
   try {
     const { data, error } = await supabase
@@ -2825,8 +2671,10 @@ app.patch("/api/notifications/:id/read", auth, async (req, res) => {
       success: true,
       notification: data
     });
+
   } catch (error) {
     console.error("READ NOTIFICATION:", error);
+
     res.status(500).json({
       success: false,
       error: "Impossible de modifier la notification"
@@ -2835,8 +2683,7 @@ app.patch("/api/notifications/:id/read", auth, async (req, res) => {
 });
 
 
-/* ================= TOUT MARQUER COMME LU ================= */
-
+// Tout marquer comme lu
 app.post("/api/notifications/read-all", auth, async (req, res) => {
   try {
     const { error } = await supabase
@@ -2848,17 +2695,19 @@ app.post("/api/notifications/read-all", auth, async (req, res) => {
     if (error) throw error;
 
     res.json({ success: true });
+
   } catch (error) {
     console.error("READ ALL NOTIFICATIONS:", error);
+
     res.status(500).json({
       success: false,
-      error: "Impossible de marquer les notifications comme lues"
+      error: "Impossible de modifier les notifications"
     });
   }
 });
 
 
-/* ================= PARAMÈTRES DU COMPTE ================= */
+/* ================= PARAMÈTRES ================= */
 
 app.get("/api/settings", auth, async (req, res) => {
   try {
@@ -2868,8 +2717,10 @@ app.get("/api/settings", auth, async (req, res) => {
       success: true,
       settings
     });
+
   } catch (error) {
     console.error("GET SETTINGS:", error);
+
     res.status(500).json({
       success: false,
       error: "Impossible de charger les paramètres"
@@ -2926,13 +2777,14 @@ app.put("/api/settings", auth, async (req, res) => {
       updates.language = String(updates.language).slice(0, 10);
     }
 
-    if (updates.theme !== undefined) {
-      if (!["light", "dark", "system"].includes(updates.theme)) {
-        return res.status(400).json({
-          success: false,
-          error: "Thème invalide"
-        });
-      }
+    if (
+      updates.theme !== undefined &&
+      !["light", "dark", "system"].includes(updates.theme)
+    ) {
+      return res.status(400).json({
+        success: false,
+        error: "Thème invalide"
+      });
     }
 
     updates.updated_at = new Date().toISOString();
@@ -2954,8 +2806,10 @@ app.put("/api/settings", auth, async (req, res) => {
       success: true,
       settings: data
     });
+
   } catch (error) {
     console.error("UPDATE SETTINGS:", error);
+
     res.status(500).json({
       success: false,
       error: "Impossible d'enregistrer les paramètres"
@@ -2977,13 +2831,7 @@ app.post("/api/blocks/:userId", auth, async (req, res) => {
       });
     }
 
-    const { data: target, error: targetError } = await supabase
-      .from("novatalk_users")
-      .select("id")
-      .eq("id", blockedId)
-      .maybeSingle();
-
-    if (targetError) throw targetError;
+    const target = await getUserById(blockedId);
 
     if (!target) {
       return res.status(404).json({
@@ -3005,32 +2853,14 @@ app.post("/api/blocks/:userId", auth, async (req, res) => {
 
     if (error) throw error;
 
-    // Retirer les relations d'amitié dans les deux sens.
-    const { error: friendError } = await supabase
-      .from("novatalk_friends")
-      .delete()
-      .or(
-        `and(user_id.eq.${req.user.id},friend_id.eq.${blockedId}),and(user_id.eq.${blockedId},friend_id.eq.${req.user.id})`
-      );
-
-    if (friendError) throw friendError;
-
-    // Retirer les abonnements dans les deux sens.
-    const { error: followError } = await supabase
-      .from("novatalk_follows")
-      .delete()
-      .or(
-        `and(follower_id.eq.${req.user.id},following_id.eq.${blockedId}),and(follower_id.eq.${blockedId},following_id.eq.${req.user.id})`
-      );
-
-    if (followError) throw followError;
-
     res.json({
       success: true,
       block: data
     });
+
   } catch (error) {
     console.error("BLOCK USER:", error);
+
     res.status(500).json({
       success: false,
       error: "Impossible de bloquer cet utilisateur"
@@ -3039,8 +2869,7 @@ app.post("/api/blocks/:userId", auth, async (req, res) => {
 });
 
 
-/* ================= DÉBLOQUER UN UTILISATEUR ================= */
-
+// Débloquer un utilisateur
 app.delete("/api/blocks/:userId", auth, async (req, res) => {
   try {
     const { error } = await supabase
@@ -3052,8 +2881,10 @@ app.delete("/api/blocks/:userId", auth, async (req, res) => {
     if (error) throw error;
 
     res.json({ success: true });
+
   } catch (error) {
     console.error("UNBLOCK USER:", error);
+
     res.status(500).json({
       success: false,
       error: "Impossible de débloquer cet utilisateur"
@@ -3062,13 +2893,12 @@ app.delete("/api/blocks/:userId", auth, async (req, res) => {
 });
 
 
-/* ================= LISTE DES UTILISATEURS BLOQUÉS ================= */
-
+// Liste des utilisateurs bloqués
 app.get("/api/blocks", auth, async (req, res) => {
   try {
     const { data, error } = await supabase
       .from("novatalk_blocks")
-      .select("id, blocked_id, created_at")
+      .select("id,blocked_id,created_at")
       .eq("blocker_id", req.user.id)
       .order("created_at", { ascending: false });
 
@@ -3081,10 +2911,11 @@ app.get("/api/blocks", auth, async (req, res) => {
     if (ids.length) {
       const { data: userData, error: userError } = await supabase
         .from("novatalk_users")
-        .select("id, full_name, username")
+        .select("id,full_name,username")
         .in("id", ids);
 
       if (userError) throw userError;
+
       users = userData || [];
     }
 
@@ -3092,8 +2923,10 @@ app.get("/api/blocks", auth, async (req, res) => {
       success: true,
       blocked_users: users
     });
+
   } catch (error) {
     console.error("GET BLOCKS:", error);
+
     res.status(500).json({
       success: false,
       error: "Impossible de charger les utilisateurs bloqués"
@@ -3102,7 +2935,7 @@ app.get("/api/blocks", auth, async (req, res) => {
 });
 
 
-/* ================= SIGNALER UN CONTENU OU UN UTILISATEUR ================= */
+/* ================= SIGNALER UN CONTENU ================= */
 
 app.post("/api/reports", auth, async (req, res) => {
   try {
@@ -3150,40 +2983,6 @@ app.post("/api/reports", auth, async (req, res) => {
       });
     }
 
-    if (reportedUserId) {
-      const { data: target, error: targetError } = await supabase
-        .from("novatalk_users")
-        .select("id")
-        .eq("id", reportedUserId)
-        .maybeSingle();
-
-      if (targetError) throw targetError;
-
-      if (!target) {
-        return res.status(404).json({
-          success: false,
-          error: "Utilisateur signalé introuvable"
-        });
-      }
-    }
-
-    if (postId) {
-      const { data: post, error: postError } = await supabase
-        .from("novatalk_posts")
-        .select("id")
-        .eq("id", postId)
-        .maybeSingle();
-
-      if (postError) throw postError;
-
-      if (!post) {
-        return res.status(404).json({
-          success: false,
-          error: "Publication signalée introuvable"
-        });
-      }
-    }
-
     const { data, error } = await supabase
       .from("novatalk_reports")
       .insert({
@@ -3203,17 +3002,17 @@ app.post("/api/reports", auth, async (req, res) => {
       success: true,
       report: data
     });
+
   } catch (error) {
     console.error("CREATE REPORT:", error);
+
     res.status(500).json({
       success: false,
       error: "Impossible d'envoyer le signalement"
     });
   }
-});/* =========================================================
-   PARTIE 6/6 — GROUPES + FIN DU SERVEUR
-   NOVATALK V4 — BY MARUCE SOLDADO 🇬🇳
-   ========================================================= */
+});
+
 
 /* ================= GROUPES ================= */
 
@@ -3222,36 +3021,41 @@ app.get("/api/groups", auth, async (req, res) => {
   try {
     const { data: memberships, error } = await supabase
       .from("novatalk_group_members")
-      .select("group_id, role, joined_at")
+      .select("group_id,role,joined_at")
       .eq("user_id", req.user.id);
 
     if (error) throw error;
 
-    const groupIds = (memberships || []).map(item => item.group_id);
+    const ids = (memberships || []).map(item => item.group_id);
 
-    if (!groupIds.length) {
-      return res.json({ success: true, groups: [] });
+    if (!ids.length) {
+      return res.json({
+        success: true,
+        groups: []
+      });
     }
 
-    const { data: groups, error: groupError } = await supabase
+    const { data, error: groupError } = await supabase
       .from("novatalk_groups")
       .select("*")
-      .in("id", groupIds)
+      .in("id", ids)
       .order("created_at", { ascending: false });
 
     if (groupError) throw groupError;
 
-    const result = (groups || []).map(group => ({
-      ...group,
-      membership: memberships.find(
-        item => item.group_id === group.id
-      )
-    }));
-
-    res.json({ success: true, groups: result });
+    res.json({
+      success: true,
+      groups: (data || []).map(group => ({
+        ...group,
+        membership: memberships.find(
+          item => item.group_id === group.id
+        )
+      }))
+    });
 
   } catch (error) {
-    console.error("GROUPS GET:", error);
+    console.error("GET GROUPS:", error);
+
     res.status(500).json({
       success: false,
       error: "Impossible de charger les groupes"
@@ -3272,7 +3076,7 @@ app.post("/api/groups", auth, async (req, res) => {
     if (name.length < 2 || name.length > 80) {
       return res.status(400).json({
         success: false,
-        error: "Le nom du groupe doit contenir entre 2 et 80 caractères"
+        error: "Nom de groupe invalide"
       });
     }
 
@@ -3305,7 +3109,8 @@ app.post("/api/groups", auth, async (req, res) => {
     });
 
   } catch (error) {
-    console.error("GROUP CREATE:", error);
+    console.error("CREATE GROUP:", error);
+
     res.status(500).json({
       success: false,
       error: "Impossible de créer le groupe"
@@ -3332,17 +3137,19 @@ app.get("/api/groups/:id", auth, async (req, res) => {
       });
     }
 
-    const { data: membership } = await supabase
+    const { data: membership, error: memberError } = await supabase
       .from("novatalk_group_members")
       .select("id")
       .eq("group_id", group.id)
       .eq("user_id", req.user.id)
       .maybeSingle();
 
+    if (memberError) throw memberError;
+
     if (group.privacy === "private" && !membership) {
       return res.status(403).json({
         success: false,
-        error: "Ce groupe est privé"
+        error: "Groupe privé"
       });
     }
 
@@ -3354,9 +3161,10 @@ app.get("/api/groups/:id", auth, async (req, res) => {
 
   } catch (error) {
     console.error("GROUP DETAILS:", error);
+
     res.status(500).json({
       success: false,
-      error: "Impossible de charger ce groupe"
+      error: "Impossible de charger le groupe"
     });
   }
 });
@@ -3387,26 +3195,14 @@ app.post("/api/groups/:id/join", auth, async (req, res) => {
       });
     }
 
-    const { data: existing } = await supabase
-      .from("novatalk_group_members")
-      .select("id")
-      .eq("group_id", group.id)
-      .eq("user_id", req.user.id)
-      .maybeSingle();
-
-    if (existing) {
-      return res.json({
-        success: true,
-        message: "Tu es déjà membre de ce groupe"
-      });
-    }
-
     const { error: joinError } = await supabase
       .from("novatalk_group_members")
-      .insert({
+      .upsert({
         group_id: group.id,
         user_id: req.user.id,
         role: "member"
+      }, {
+        onConflict: "group_id,user_id"
       });
 
     if (joinError) throw joinError;
@@ -3418,9 +3214,10 @@ app.post("/api/groups/:id/join", auth, async (req, res) => {
 
   } catch (error) {
     console.error("GROUP JOIN:", error);
+
     res.status(500).json({
       success: false,
-      error: "Impossible de rejoindre ce groupe"
+      error: "Impossible de rejoindre le groupe"
     });
   }
 });
@@ -3429,28 +3226,22 @@ app.post("/api/groups/:id/join", auth, async (req, res) => {
 // Quitter un groupe
 app.delete("/api/groups/:id/leave", auth, async (req, res) => {
   try {
-    const { data: membership, error } = await supabase
+    const { data, error } = await supabase
       .from("novatalk_group_members")
-      .select("*")
+      .delete()
       .eq("group_id", req.params.id)
       .eq("user_id", req.user.id)
+      .select("id")
       .maybeSingle();
 
     if (error) throw error;
 
-    if (!membership) {
+    if (!data) {
       return res.status(404).json({
         success: false,
         error: "Tu n'es pas membre de ce groupe"
       });
     }
-
-    const { error: deleteError } = await supabase
-      .from("novatalk_group_members")
-      .delete()
-      .eq("id", membership.id);
-
-    if (deleteError) throw deleteError;
 
     res.json({
       success: true,
@@ -3459,6 +3250,7 @@ app.delete("/api/groups/:id/leave", auth, async (req, res) => {
 
   } catch (error) {
     console.error("GROUP LEAVE:", error);
+
     res.status(500).json({
       success: false,
       error: "Impossible de quitter le groupe"
@@ -3467,12 +3259,12 @@ app.delete("/api/groups/:id/leave", auth, async (req, res) => {
 });
 
 
-// Liste des membres d'un groupe
+// Membres d'un groupe
 app.get("/api/groups/:id/members", auth, async (req, res) => {
   try {
     const { data: group, error: groupError } = await supabase
       .from("novatalk_groups")
-      .select("id, privacy")
+      .select("id,privacy")
       .eq("id", req.params.id)
       .maybeSingle();
 
@@ -3485,23 +3277,25 @@ app.get("/api/groups/:id/members", auth, async (req, res) => {
       });
     }
 
-    const { data: ownMembership } = await supabase
+    const { data: membership, error: memberError } = await supabase
       .from("novatalk_group_members")
       .select("id")
       .eq("group_id", group.id)
       .eq("user_id", req.user.id)
       .maybeSingle();
 
-    if (group.privacy === "private" && !ownMembership) {
+    if (memberError) throw memberError;
+
+    if (group.privacy === "private" && !membership) {
       return res.status(403).json({
         success: false,
         error: "Accès réservé aux membres"
       });
     }
 
-    const { data: members, error } = await supabase
+    const { data, error } = await supabase
       .from("novatalk_group_members")
-      .select("id, user_id, role, joined_at")
+      .select("id,user_id,role,joined_at")
       .eq("group_id", group.id)
       .order("joined_at", { ascending: true });
 
@@ -3509,11 +3303,12 @@ app.get("/api/groups/:id/members", auth, async (req, res) => {
 
     res.json({
       success: true,
-      members: members || []
+      members: data || []
     });
 
   } catch (error) {
     console.error("GROUP MEMBERS:", error);
+
     res.status(500).json({
       success: false,
       error: "Impossible de charger les membres"
@@ -3522,7 +3317,7 @@ app.get("/api/groups/:id/members", auth, async (req, res) => {
 });
 
 
-// Ajouter un membre (administrateur ou modérateur)
+// Ajouter un membre
 app.post("/api/groups/:id/members", auth, async (req, res) => {
   try {
     const userId = String(req.body.user_id || "").trim();
@@ -3546,21 +3341,7 @@ app.post("/api/groups/:id/members", auth, async (req, res) => {
     if (!actor || !["admin", "moderator"].includes(actor.role)) {
       return res.status(403).json({
         success: false,
-        error: "Seuls les administrateurs et modérateurs peuvent ajouter un membre"
-      });
-    }
-
-    const { data: existing } = await supabase
-      .from("novatalk_group_members")
-      .select("id")
-      .eq("group_id", req.params.id)
-      .eq("user_id", userId)
-      .maybeSingle();
-
-    if (existing) {
-      return res.status(409).json({
-        success: false,
-        error: "Cet utilisateur est déjà membre"
+        error: "Permission insuffisante"
       });
     }
 
@@ -3581,78 +3362,69 @@ app.post("/api/groups/:id/members", auth, async (req, res) => {
 
   } catch (error) {
     console.error("GROUP ADD MEMBER:", error);
+
     res.status(500).json({
       success: false,
-      error: "Impossible d'ajouter ce membre"
+      error: "Impossible d'ajouter le membre"
     });
   }
 });
 
 
 // Retirer un membre
-app.delete("/api/groups/:id/members/:userId", auth, async (req, res) => {
-  try {
-    const targetUserId = req.params.userId;
+app.delete(
+  "/api/groups/:id/members/:userId",
+  auth,
+  async (req, res) => {
+    try {
+      const { data: actor, error: actorError } = await supabase
+        .from("novatalk_group_members")
+        .select("role")
+        .eq("group_id", req.params.id)
+        .eq("user_id", req.user.id)
+        .maybeSingle();
 
-    const { data: actor, error: actorError } = await supabase
-      .from("novatalk_group_members")
-      .select("role")
-      .eq("group_id", req.params.id)
-      .eq("user_id", req.user.id)
-      .maybeSingle();
+      if (actorError) throw actorError;
 
-    if (actorError) throw actorError;
+      if (!actor || !["admin", "moderator"].includes(actor.role)) {
+        return res.status(403).json({
+          success: false,
+          error: "Permission insuffisante"
+        });
+      }
 
-    if (!actor || !["admin", "moderator"].includes(actor.role)) {
-      return res.status(403).json({
+      const { data, error } = await supabase
+        .from("novatalk_group_members")
+        .delete()
+        .eq("group_id", req.params.id)
+        .eq("user_id", req.params.userId)
+        .select("id")
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (!data) {
+        return res.status(404).json({
+          success: false,
+          error: "Membre introuvable"
+        });
+      }
+
+      res.json({
+        success: true,
+        message: "Membre retiré"
+      });
+
+    } catch (error) {
+      console.error("GROUP REMOVE MEMBER:", error);
+
+      res.status(500).json({
         success: false,
-        error: "Permission insuffisante"
+        error: "Impossible de retirer le membre"
       });
     }
-
-    const { data: target, error: targetError } = await supabase
-      .from("novatalk_group_members")
-      .select("*")
-      .eq("group_id", req.params.id)
-      .eq("user_id", targetUserId)
-      .maybeSingle();
-
-    if (targetError) throw targetError;
-
-    if (!target) {
-      return res.status(404).json({
-        success: false,
-        error: "Membre introuvable"
-      });
-    }
-
-    if (target.role === "admin" && actor.role !== "admin") {
-      return res.status(403).json({
-        success: false,
-        error: "Un modérateur ne peut pas retirer un administrateur"
-      });
-    }
-
-    const { error } = await supabase
-      .from("novatalk_group_members")
-      .delete()
-      .eq("id", target.id);
-
-    if (error) throw error;
-
-    res.json({
-      success: true,
-      message: "Membre retiré"
-    });
-
-  } catch (error) {
-    console.error("GROUP REMOVE MEMBER:", error);
-    res.status(500).json({
-      success: false,
-      error: "Impossible de retirer ce membre"
-    });
   }
-});
+);
 
 
 /* ================= ROUTE INCONNUE ================= */
@@ -3682,7 +3454,7 @@ app.use((error, req, res, next) => {
 });
 
 
-/* ================= DÉMARRAGE ================= */
+/* ================= DÉMARRAGE DU SERVEUR ================= */
 
 app.listen(PORT, () => {
   console.log("--------------------------------------");
@@ -3690,7 +3462,10 @@ app.listen(PORT, () => {
   console.log("CONNECT THE WORLD");
   console.log("BY MARUCE SOLDADO 🇬🇳");
   console.log("PORT:", PORT);
-  console.log("SUPABASE:", Boolean(supabase));
+  console.log("SUPABASE: CONFIGURED");
   console.log("SERVER: ONLINE");
   console.log("--------------------------------------");
 });
+
+
+/* ================= FIN DU SERVEUR ================= */
